@@ -14,7 +14,7 @@ const ticketOptions = [
   { value: 1, label: '已提交' },
 ];
 
-const TicketReview: React.FC = () => {
+const Scheduling: React.FC = () => {
   const [ticketType, setTicketType] = useState<string>('0');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
@@ -77,7 +77,7 @@ const TicketReview: React.FC = () => {
           <Row gutter={10}>
             <Col>
               <Button type="primary" onClick={openShowTicketModal}>
-                审核
+                会签
               </Button>
             </Col>
           </Row>
@@ -139,10 +139,10 @@ const TicketReview: React.FC = () => {
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={true} />
+        <TicketDetailModal ticketDetail={mockTicketDetail} canSign={true} />
       </Modal>
     </PageContainer>
   );
 };
 
-export default TicketReview;
+export default Scheduling;

@@ -103,7 +103,7 @@ const SubmitTicketList = (props: {
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={false} />
+        <TicketDetailModal ticketDetail={mockTicketDetail} />
       </Modal>
     </Card>
   );

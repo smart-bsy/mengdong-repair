@@ -1,24 +1,40 @@
-import { SearchOutlined } from '@ant-design/icons';
+import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Input, Modal, Row, Select, Table } from 'antd';
-import { useState } from 'react';
-import { mockSubmitTicketList, mockTicketDetail, mockUnSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
-import SubmitTicketList from '../../components/SubmitTicketList';
+import { Button, Card, Col, Descriptions, Input, Modal, Row, Select, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import {
+  mockDoingTicketList,
+  mockSubmitTicketList,
+  mockTicketDetail,
+  mockUnSubmitTicketList,
+} from '../../common/mock';
+import { SubmitTicket, Ticket } from '../../common/types';
+import SubmitTicketList from '../../components/SubmitTicketList';
 import TicketDetailModal from '../../components/TicketDetail';
 
 const ticketOptions = [
   { value: 0, label: '未提交' },
-  { value: 1, label: '已提交' },
+  { value: 1, label: '提交' },
 ];
 
-const TicketReview: React.FC = () => {
-  const [ticketType, setTicketType] = useState<string>('0');
+const TicketApprove: React.FC = () => {
+  const [searchKey, setSearchKey] = useState<string>('');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
+  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<SubmitTicket[]>(mockSubmitTicketList);
+  const [ticketType, setTicketType] = useState<string>('0');
+
+  const filterTicketList = (): void => {};
+
+  const handleTicketTypeChange = (value: string): void => {
+    setTicketType(value);
+  };
+
+  const refresh = (): void => {
+    console.log('刷新列表');
+  };
 
   const openShowTicketModal = (): void => {
     setIsShowTicketModalOpen(true);
@@ -77,7 +93,7 @@ const TicketReview: React.FC = () => {
           <Row gutter={10}>
             <Col>
               <Button type="primary" onClick={openShowTicketModal}>
-                审核
+                批准
               </Button>
             </Col>
           </Row>
@@ -86,20 +102,22 @@ const TicketReview: React.FC = () => {
     },
   ];
 
-  const handleTicketTypeChange = (value: string): void => {
-    setTicketType(value);
-  };
-
   return (
     <PageContainer>
       <Card>
         <Row gutter={16}>
           <Row>
             <Col>
-              <Input placeholder="涉及场站" />
+              <Input
+                placeholder="涉及场站"
+                value={searchKey}
+                onChange={({ target }) => {
+                  setSearchKey(target.value);
+                }}
+              />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={() => {}}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
                 查询
               </Button>
             </Col>
@@ -114,6 +132,11 @@ const TicketReview: React.FC = () => {
               }}
             />
           </Col>
+          <Col>
+            <Button icon={<Loading3QuartersOutlined />} onClick={refresh}>
+              刷新
+            </Button>
+          </Col>
         </Row>
       </Card>
       <Card>
@@ -124,7 +147,7 @@ const TicketReview: React.FC = () => {
         ) : (
           <>
             <SubmitTicketList
-              ticketList={submitTicketList}
+              ticketList={doingTicketList}
               searchKeyWord={''}
               searchRangeDate={['', '']}
             />
@@ -139,10 +162,10 @@ const TicketReview: React.FC = () => {
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={true} />
+        <TicketDetailModal ticketDetail={mockTicketDetail} canApprove={true} />
       </Modal>
     </PageContainer>
   );
 };
 
-export default TicketReview;
+export default TicketApprove;

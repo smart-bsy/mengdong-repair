@@ -10,11 +10,11 @@ import dayjs from 'dayjs';
 import TicketDetailModal from '../../components/TicketDetail';
 
 const ticketOptions = [
-  { value: 0, label: '未提交' },
-  { value: 1, label: '已提交' },
+  { value: 0, label: '未签收' },
+  { value: 1, label: '已签收' },
 ];
 
-const TicketReview: React.FC = () => {
+const ScheduleReceive: React.FC = () => {
   const [ticketType, setTicketType] = useState<string>('0');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
@@ -77,7 +77,7 @@ const TicketReview: React.FC = () => {
           <Row gutter={10}>
             <Col>
               <Button type="primary" onClick={openShowTicketModal}>
-                审核
+                接收
               </Button>
             </Col>
           </Row>
@@ -139,10 +139,10 @@ const TicketReview: React.FC = () => {
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={true} />
+        <TicketDetailModal ticketDetail={mockTicketDetail} canReceive={true} />
       </Modal>
     </PageContainer>
   );
 };
 
-export default TicketReview;
+export default ScheduleReceive;

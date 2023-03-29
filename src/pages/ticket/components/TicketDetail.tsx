@@ -1,4 +1,4 @@
-import { Button, Card, Col, Descriptions, Modal, Row, Steps } from 'antd';
+import { Button, Card, Checkbox, Col, Descriptions, Input, Modal, Radio, Row, Steps } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -6,8 +6,23 @@ import { mockOperationLogs } from '../common/mock';
 import { TicketDetail } from '../common/types';
 import OperationLogList from './OperationLogs';
 
-const TicketDetailModal = (props: { ticketDetail: TicketDetail; canReview: boolean }) => {
-  const { ticketDetail, canReview } = props;
+interface TicketDetailComProps {
+  ticketDetail: TicketDetail;
+  canReview?: boolean;
+  canApprove?: boolean;
+  canEnergy?: boolean;
+  canSign?: boolean;
+  canReceive?: boolean;
+}
+
+const TicketDetailModal = ({
+  ticketDetail,
+  canReview = false,
+  canApprove = false,
+  canEnergy = false,
+  canSign = false,
+  canReceive = false,
+}: TicketDetailComProps) => {
   const [isOperationLogModalOpen, setIsOperationLogModalOpen] = useState<boolean>();
   const [operationLogs, setOperationLogs] = useState();
 
@@ -171,6 +186,67 @@ const TicketDetailModal = (props: { ticketDetail: TicketDetail; canReview: boole
           </Card>
         </div>
       )}
+      {canApprove && (
+        <div style={{ marginTop: 15 }}>
+          <Card>
+            <Descriptions bordered>
+              <Descriptions.Item label="是否通过">
+                <Checkbox onChange={() => {}}>同意</Checkbox>
+              </Descriptions.Item>
+              <Descriptions.Item label="批准人签字">
+                <Input value={'易建军'} />
+              </Descriptions.Item>
+              <Descriptions.Item label="签字时间">{'2023-03-28 12:00'}</Descriptions.Item>
+              <Descriptions.Item label="审批意见">
+                <TextArea rows={4} />
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </div>
+      )}
+      {canEnergy && (
+        <div style={{ marginTop: 15 }}>
+          <Card>
+            <Descriptions bordered>
+              <Descriptions.Item label="参数设置">
+                <Radio.Group onChange={() => {}}>
+                  <Radio value={1}>已通过参数设置是西安</Radio>
+                  <Radio value={2}>不可通过参数设置实现，需调度配合</Radio>
+                </Radio.Group>
+              </Descriptions.Item>
+              <br />
+              <br />
+              <Descriptions.Item label="新能源会签意见">
+                <TextArea rows={4} />
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </div>
+      )}
+      {canSign && (
+        <div style={{ marginTop: 15 }}>
+          <Card>
+            <Descriptions bordered>
+              <Descriptions.Item label="审核人">韩玉辉</Descriptions.Item>
+              <br />
+              <br />
+              <Descriptions.Item label="调度控制专业意见">
+                <TextArea rows={4} />
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </div>
+      )}
+      {canReceive && (
+        <div style={{ marginTop: 15 }}>
+          <Card>
+            <Descriptions bordered>
+              <Descriptions.Item label="签收人">明德才</Descriptions.Item>
+              <Descriptions.Item label="签收时间">{'2023-03-28 19:12:00'}</Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </div>
+      )}
       <div style={{ marginTop: 15 }}>
         <Row justify={'center'} align="bottom" gutter={16}>
           {canReview && (
@@ -180,6 +256,40 @@ const TicketDetailModal = (props: { ticketDetail: TicketDetail; canReview: boole
               </Col>
               <Col>
                 <Button>最终签字</Button>
+              </Col>
+            </>
+          )}
+          {canApprove && (
+            <>
+              <Col>
+                <Button>退回</Button>
+              </Col>
+              <Col>
+                <Button>批准</Button>
+              </Col>
+            </>
+          )}
+          {canEnergy && (
+            <>
+              <Col>
+                <Button>提交</Button>
+              </Col>
+            </>
+          )}
+          {canSign && (
+            <>
+              <Col>
+                <Button>签字</Button>
+              </Col>
+              <Col>
+                <Button>最终签字</Button>
+              </Col>
+            </>
+          )}
+          {canReceive && (
+            <>
+              <Col>
+                <Button>签收</Button>
               </Col>
             </>
           )}

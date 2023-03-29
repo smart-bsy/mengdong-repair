@@ -13,7 +13,6 @@ import {
   Descriptions,
   Input,
   Modal,
-  Popconfirm,
   Row,
   Select,
   Steps,
@@ -24,7 +23,6 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useAccess } from 'umi';
 import {
@@ -41,7 +39,6 @@ const dateFormat = 'YYYY/MM/DD';
 const ticketOptions = [
   { value: 0, label: '未提交' },
   { value: 1, label: '提交' },
-  { value: 2, label: '已发起流程' },
 ];
 
 const TicketList: React.FC = () => {
@@ -60,16 +57,6 @@ const TicketList: React.FC = () => {
     opinion: '',
   };
   const [createTicketForm, setCreateTicketForm] = useState<Ticket>(nullTicket);
-  const nullSubmitTicket: SubmitTicket = {
-    id: '',
-    department: '',
-    owner: '',
-    createTime: 0,
-    involvedStation: '',
-    reason: '',
-    opinion: '',
-    status: '',
-  };
 
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
   const [submitTicketList, setSubmitTicketList] = useState<SubmitTicket[]>(mockSubmitTicketList);

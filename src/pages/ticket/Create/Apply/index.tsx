@@ -13,24 +13,20 @@ import {
   Descriptions,
   Input,
   Modal,
-  Popconfirm,
   Row,
   Select,
-  Table,
   Tag,
   Upload,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
   mockDoingTicketList,
   mockSubmitTicketList,
   mockUnSubmitTicketList,
 } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { SubmitTicket, Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
@@ -91,107 +87,6 @@ const TicketList: React.FC = () => {
   const closeCreateTicketModal = (): void => {
     setIsCreateTicketModalOpen(false);
   };
-
-  const submitColumns: ColumnsType<SubmitTicket | Ticket> = [
-    {
-      title: '序号',
-      render: (text, record, index) => {
-        return <span>{index + 1}</span>;
-      },
-    },
-    {
-      title: '编号',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
-    },
-    {
-      title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
-    },
-    {
-      title: '申请时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (createTime) => {
-        return <span>{dayjs(createTime).format('YYYY-MM-DD HH:mm')}</span>;
-      },
-    },
-    {
-      title: '涉及场站',
-      dataIndex: 'involvedStation',
-      key: 'createTime',
-    },
-    {
-      title: '申请原因',
-      dataIndex: 'reason',
-      key: 'reason',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        return (
-          <>
-            <Tag color={status == '通过' ? 'blue' : 'red'}>{status}</Tag>
-          </>
-        );
-      },
-    },
-  ];
-
-  const doingColumns: ColumnsType<SubmitTicket | Ticket> = [
-    {
-      title: '序号',
-      render: (text, record, index) => {
-        return <span>{index + 1}</span>;
-      },
-    },
-    {
-      title: '编号',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
-    },
-    {
-      title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
-    },
-    {
-      title: '申请时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (createTime) => {
-        return <span>{dayjs(createTime).format('YYYY-MM-DD HH:mm')}</span>;
-      },
-    },
-    {
-      title: '涉及场站',
-      dataIndex: 'involvedStation',
-      key: 'createTime',
-    },
-    {
-      title: '申请原因',
-      dataIndex: 'reason',
-      key: 'reason',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-    },
-  ];
 
   const refresh = (): void => {
     console.log('刷新列表');
