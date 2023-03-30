@@ -39,7 +39,10 @@ const UnSubmitTicketList = (props: {
   const [isEditTicketModalOpen, setIsEditTicketModalOpen] = useState<boolean>(false);
   const [editTicketForm, setEditTicketForm] = useState<Ticket>(nullTicket);
 
-  const openShowTicketModal = (): void => {
+  const [curTicketId, setCurTicketId] = useState<number>(0);
+
+  const openShowTicketModal = (id: number): void => {
+    setCurTicketId(id);
     setIsShowTicketModalOpen(true);
   };
 
@@ -70,18 +73,18 @@ const UnSubmitTicketList = (props: {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',
@@ -109,12 +112,20 @@ const UnSubmitTicketList = (props: {
         return (
           <Row gutter={10}>
             <Col>
-              <Button type="primary" onClick={openShowTicketModal}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  openShowTicketModal(id);
+                }}
+              >
                 详情
               </Button>
             </Col>
             <Col>
               <Button onClick={openEditTicketModal}>编辑</Button>
+            </Col>
+            <Col>
+              <Button onClick={() => {}}>提交</Button>
             </Col>
             <Col>
               <Popconfirm
@@ -135,8 +146,6 @@ const UnSubmitTicketList = (props: {
 
   const saveTicketHandler = () => {};
 
-  const submitTicketHandler = () => {};
-
   return (
     <>
       <Table columns={unSubmitColumns} dataSource={ticketList} />
@@ -148,7 +157,7 @@ const UnSubmitTicketList = (props: {
         footer={null}
       >
         <Descriptions title={`申请编号: ${mockTicketDetail.ticket.id}`} bordered>
-          <Descriptions.Item label="申请处室">{editTicketForm.department}</Descriptions.Item>
+          <Descriptions.Item label="申请处室">{editTicketForm.office}</Descriptions.Item>
           <Descriptions.Item label="申请时间">
             {dayjs(editTicketForm.createTime).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
@@ -180,9 +189,6 @@ const UnSubmitTicketList = (props: {
                   保存
                 </Button>
               </Col>
-              <Col>
-                <Button onClick={submitTicketHandler}>提交</Button>
-              </Col>
             </Row>
           </div>
         </Descriptions>
@@ -190,12 +196,11 @@ const UnSubmitTicketList = (props: {
       <Modal
         title="场站参数详情"
         open={isShowTicketModalOpen}
-        onOk={openShowTicketModal}
         onCancel={closeShowTicketModal}
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={false} />
+        <TicketDetailModal ticketId={curTicketId} canReview={false} />
       </Modal>
     </>
   );

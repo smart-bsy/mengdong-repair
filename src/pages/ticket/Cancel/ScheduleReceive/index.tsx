@@ -3,7 +3,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { Button, Card, Col, Input, Modal, Row, Select, Table } from 'antd';
 import { useState } from 'react';
 import { mockSubmitTicketList, mockTicketDetail, mockUnSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -18,7 +18,7 @@ const ScheduleReceive: React.FC = () => {
   const [ticketType, setTicketType] = useState<string>('0');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<SubmitTicket[]>(mockSubmitTicketList);
+  const [submitTicketList, setSubmitTicketList] = useState<Ticket[]>(mockSubmitTicketList);
 
   const openShowTicketModal = (): void => {
     setIsShowTicketModalOpen(true);

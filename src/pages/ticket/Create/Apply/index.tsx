@@ -1,3 +1,4 @@
+import { requestCreateTicket, requestQueryTicketList } from '@/services/ticket/apply/api';
 import {
   Loading3QuartersOutlined,
   PlusOutlined,
@@ -15,18 +16,15 @@ import {
   Modal,
   Row,
   Select,
-  Tag,
+  Spin,
   Upload,
+  message,
 } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import {
-  mockDoingTicketList,
-  mockSubmitTicketList,
-  mockUnSubmitTicketList,
-} from '../../common/mock';
-import type { SubmitTicket, Ticket } from '../../common/types';
+import { mockSubmitTicketList, mockUnSubmitTicketList } from '../../common/mock';
+import { getNullTicket, Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
@@ -35,52 +33,61 @@ const dateFormat = 'YYYY/MM/DD';
 
 const TicketList: React.FC = () => {
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState<boolean>(false);
-  const nullTicket: Ticket = {
-    id: '',
-    department: '',
-    owner: '',
-    createTime: 0,
-    involvedStation: '',
-    reason: '',
-    opinion: '',
-  };
-  const [createTicketForm, setCreateTicketForm] = useState<Ticket>(nullTicket);
-  const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<SubmitTicket[]>(mockSubmitTicketList);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const [isCreatingTicket, setIsCreatingTicket] = useState<boolean>(false);
+
+  const [createTicketForm, setCreateTicketForm] = useState<Ticket>(getNullTicket());
+
+  const [ticketList, setTicketList] = useState<Ticket[]>([]);
 
   const [searchKey, setSearchKey] = useState<string>('');
 
   const [ticketType, setTicketType] = useState<string>('0');
+
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
+
+  const [dateRange, setDateRange] = useState<[string, string]>(['', '']);
+
   const ticketOptions = [
-    { value: 0, label: '未提交' },
-    { value: 1, label: '提交' },
-    { value: 2, label: '已发起流程' },
+    { value: '0', label: '未提交' },
+    { value: '1', label: '提交' },
   ];
 
-  // 这里后面应该更改为 remote fetch
+  const fetchTicketList = async (
+    submit: string,
+    startDate?: number,
+    endDate?: number,
+    place?: string,
+  ) => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestQueryTicketList({ submit, startDate, endDate, place });
+      if (result.code == 2000) {
+        setTicketList(result.data);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
   useEffect(() => {
-    // if (ticketType == '0') {
-    //   setunSubmitTicketList(mockUnSubmitTicketList);
-    // }
-    // if (ticketType == '1') {
-    //   setunSubmitTicketList(mockSubmitTicketList);
-    // }
-    // if (ticketType == '2') {
-    //   (mockDoingTicketList);
-    // }
+    fetchTicketList(ticketOptions[0].value);
+    setCreateTicketForm(getNullTicket());
+  }, []);
+
+  useEffect(() => {
+    fetchTicketList(ticketType);
   }, [ticketType]);
 
   const openCreateTicketModal = (): void => {
-    setCreateTicketForm({
-      id: '',
-      department: '远程获取',
-      owner: '',
-      createTime: dayjs().millisecond(),
-      involvedStation: '',
-      reason: '',
-      opinion: '',
-    });
+    const ticket: Ticket = getNullTicket();
+    ticket.createTime = new Date().getTime();
+    ticket.office = '测试处室';
+    setCreateTicketForm(ticket);
     setIsCreateTicketModalOpen(true);
   };
 
@@ -89,7 +96,9 @@ const TicketList: React.FC = () => {
   };
 
   const refresh = (): void => {
-    console.log('刷新列表');
+    setDateRange(['', '']);
+    setSearchKey('');
+    fetchTicketList(ticketType);
   };
 
   const handleCreateTicketFormItemChange = (name: string, value: any): void => {
@@ -103,35 +112,28 @@ const TicketList: React.FC = () => {
   };
 
   const filterTicketList = (): void => {
-    if (searchKey == '') {
-      if (ticketType == '0') {
-        setunSubmitTicketList(mockUnSubmitTicketList);
-      } else {
-        setunSubmitTicketList(mockSubmitTicketList);
-      }
-      return;
-    }
-    setunSubmitTicketList(() => {
-      if (ticketType == '0') {
-        return mockUnSubmitTicketList.filter((t) => {
-          return t.involvedStation.indexOf(searchKey) >= 0;
-        });
-      }
-      return mockSubmitTicketList.filter((t) => {
-        return t.involvedStation.indexOf(searchKey) >= 0;
-      });
+    let list: Ticket[] = ticketList.filter((item) => {
+      return item.involvedStation.indexOf(searchKey) >= 0;
     });
+    if (dateRange[0].length > 0 && dateRange[1].length > 0) {
+      list = list.filter((item) => {
+        return (
+          item.createTime >= dayjs(dateRange[0], 'YYYY/MM/DD').millisecond() &&
+          item.createTime <= dayjs(dateRange[1], 'YYYY/MM/DD').millisecond()
+        );
+      });
+    }
+    setTicketList(list);
   };
 
   const getTableNode = (type: string): React.ReactNode => {
     if (type == '0') {
       return (
         <UnSubmitTicketList
-          ticketList={unSubmitTicketList}
+          ticketList={ticketList}
           saveHandle={(ticket: Ticket) => {}}
           submitHandleHandle={(ticket: Ticket) => {}}
           deleteHandle={(ticket: Ticket) => {}}
-          // 后面使用useState
           searchKeyword={''}
           searchDateRange={['', '']}
         />
@@ -139,30 +141,35 @@ const TicketList: React.FC = () => {
     }
     if (type == '1') {
       return (
-        <SubmitTicketList
-          ticketList={submitTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
-      );
-    }
-    if (type == '2') {
-      return (
-        <SubmitTicketList
-          ticketList={doingTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
+        <SubmitTicketList ticketList={ticketList} searchKeyWord={''} searchRangeDate={['', '']} />
       );
     }
   };
 
   const rangeDateChange = (values: any, dateString: [string, string]) => {
-    console.log(dateString);
+    setDateRange(dateString);
+  };
+
+  const createTicket = async () => {
+    try {
+      setIsCreatingTicket(true);
+      const result = await requestCreateTicket(createTicketForm);
+      if (result.code == 2000) {
+        messageApi.success('创建成功');
+        closeCreateTicketModal();
+        fetchTicketList('0');
+      }
+    } catch (error) {
+      console.log(error);
+      messageApi.error('创建失败');
+    } finally {
+      setIsCreatingTicket(false);
+    }
   };
 
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
@@ -171,6 +178,7 @@ const TicketList: React.FC = () => {
               onChange={(values, formatString) => {
                 rangeDateChange(values, formatString);
               }}
+              allowClear
             />
           </Row>
           <Row>
@@ -211,7 +219,17 @@ const TicketList: React.FC = () => {
           </Col>
         </Row>
       </Card>
-      <Card>{getTableNode(ticketType)}</Card>
+      <Card>
+        {isLoadingList ? (
+          <>
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
+          </>
+        ) : (
+          getTableNode(ticketType)
+        )}
+      </Card>
       <Modal
         title="新建"
         open={isCreateTicketModalOpen}
@@ -220,9 +238,9 @@ const TicketList: React.FC = () => {
         footer={null}
       >
         <Descriptions title={`申请编号`} bordered>
-          <Descriptions.Item label="申请处室">{createTicketForm.department}</Descriptions.Item>
+          <Descriptions.Item label="申请处室">{createTicketForm.office}</Descriptions.Item>
           <Descriptions.Item label="申请时间">
-            {dayjs().format('YYYY-MM-DD HH:mm')}
+            {dayjs(createTicketForm.createTime).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
           <Descriptions.Item label="涉及场站">
             <Input
@@ -254,10 +272,9 @@ const TicketList: React.FC = () => {
         <div style={{ marginTop: 15 }}>
           <Row justify={'center'} align="bottom" gutter={16}>
             <Col>
-              <Button type="primary">保存</Button>
-            </Col>
-            <Col>
-              <Button>提交</Button>
+              <Button onClick={createTicket} type="primary" loading={isCreatingTicket}>
+                确认
+              </Button>
             </Col>
           </Row>
         </div>

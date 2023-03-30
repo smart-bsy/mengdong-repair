@@ -1,16 +1,11 @@
 import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Descriptions, Input, Modal, Row, Select, Table } from 'antd';
+import { Button, Card, Col, Input, Modal, Row, Select, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
-import {
-  mockDoingTicketList,
-  mockSubmitTicketList,
-  mockTicketDetail,
-  mockUnSubmitTicketList,
-} from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import React, { useState } from 'react';
+import { mockDoingTicketList, mockTicketDetail, mockUnSubmitTicketList } from '../../common/mock';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import TicketDetailModal from '../../components/TicketDetail';
 
@@ -22,7 +17,7 @@ const ticketOptions = [
 const TicketApprove: React.FC = () => {
   const [searchKey, setSearchKey] = useState<string>('');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
   const [ticketType, setTicketType] = useState<string>('0');
 

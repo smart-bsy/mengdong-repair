@@ -3,13 +3,8 @@ import { PageContainer } from '@ant-design/pro-components';
 import { Button, Card, Col, Descriptions, Input, Modal, Row, Select, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
-import {
-  mockDoingTicketList,
-  mockSubmitTicketList,
-  mockTicketDetail,
-  mockUnSubmitTicketList,
-} from '../../common/mock';
+import React, { useState } from 'react';
+import { mockDoingTicketList, mockTicketDetail, mockUnSubmitTicketList } from '../../common/mock';
 import { SubmitTicket, Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import TicketDetailModal from '../../components/TicketDetail';
@@ -22,7 +17,7 @@ const ticketOptions = [
 const TicketApprove: React.FC = () => {
   const [searchKey, setSearchKey] = useState<string>('');
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
   const [ticketType, setTicketType] = useState<string>('0');
 
@@ -53,18 +48,18 @@ const TicketApprove: React.FC = () => {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',

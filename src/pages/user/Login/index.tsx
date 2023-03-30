@@ -54,9 +54,10 @@ const Login: React.FC = () => {
   const handleSubmit = async (values: API.LoginParams) => {
     try {
       // 登录
-      const msg = await login({ ...values, type });
-      console.log(msg);
-      if (msg.status === 'ok') {
+      const res = await login({ ...values, type });
+      console.log(res);
+      if (res.code == '2000') {
+        console.log('ok');
         const defaultLoginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
           defaultMessage: '登录成功！',
@@ -69,8 +70,9 @@ const Login: React.FC = () => {
         const { redirect } = query as { redirect: string };
         history.push(redirect || '/');
         return;
+      } else {
+        console.log('fail');
       }
-      console.log(msg);
       // 如果失败去设置用户错误信息
       setUserLoginState(msg);
     } catch (error) {

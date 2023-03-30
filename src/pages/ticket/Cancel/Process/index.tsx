@@ -5,12 +5,12 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { mockDoingTicketList, mockSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 
 const TicketProcess: React.FC = () => {
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
 
   const [searchKey, setSearchKey] = useState<string>('');
 

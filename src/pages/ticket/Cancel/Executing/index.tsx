@@ -4,22 +4,24 @@ import { Button, Card, Col, Descriptions, Input, Modal, Row } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import { mockDoingTicketList, mockSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import { mockDoingTicketList } from '../../common/mock';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 
 const TicketExecuting: React.FC = () => {
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
 
   const nullTicket: Ticket = {
-    id: '',
-    department: '',
-    owner: '',
+    id: 0,
+    code: '',
+    office: '',
+    applicant: '',
     createTime: 0,
     involvedStation: '',
     reason: '',
     opinion: '',
+    status: '',
   };
 
   const [searchKey, setSearchKey] = useState<string>('');
@@ -30,7 +32,7 @@ const TicketExecuting: React.FC = () => {
     }
   }, [isShowTicketModalOpen]);
 
-  const doingColumns: ColumnsType<SubmitTicket | Ticket> = [
+  const doingColumns: ColumnsType<Ticket> = [
     {
       title: '序号',
       render: (text, record, index) => {

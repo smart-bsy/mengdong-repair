@@ -7,7 +7,7 @@ import { TicketDetail } from '../common/types';
 import OperationLogList from './OperationLogs';
 
 interface TicketDetailComProps {
-  ticketDetail: TicketDetail;
+  ticketId: number;
   canReview?: boolean;
   canApprove?: boolean;
   canEnergy?: boolean;
@@ -16,7 +16,7 @@ interface TicketDetailComProps {
 }
 
 const TicketDetailModal = ({
-  ticketDetail,
+  ticketId,
   canReview = false,
   canApprove = false,
   canEnergy = false,
@@ -28,6 +28,10 @@ const TicketDetailModal = ({
 
   const [isShowNodeModalOpen, setIsShowNodeModalOpen] = useState<boolean>(false);
   const [nodeDetail, setNodeDetail] = useState();
+
+  const [ticketDetail, setTicketDetail] = useState<>();
+
+  useEffect(() => {}, []);
 
   const openShowNodeModal = (): void => {
     setIsShowNodeModalOpen(true);

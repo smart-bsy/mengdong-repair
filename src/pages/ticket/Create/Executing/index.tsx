@@ -5,22 +5,24 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { mockDoingTicketList, mockSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
+
+const nullTicket: Ticket = {
+  id: 0,
+  code: '',
+  office: '',
+  applicant: '',
+  createTime: 0,
+  involvedStation: '',
+  reason: '',
+  opinion: '',
+  status: '',
+};
 
 const TicketExecuting: React.FC = () => {
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
-
-  const nullTicket: Ticket = {
-    id: '',
-    department: '',
-    owner: '',
-    createTime: 0,
-    involvedStation: '',
-    reason: '',
-    opinion: '',
-  };
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
 
   const [searchKey, setSearchKey] = useState<string>('');
 
@@ -30,7 +32,7 @@ const TicketExecuting: React.FC = () => {
     }
   }, [isShowTicketModalOpen]);
 
-  const doingColumns: ColumnsType<SubmitTicket | Ticket> = [
+  const doingColumns: ColumnsType<Ticket> = [
     {
       title: '序号',
       render: (text, record, index) => {
@@ -39,18 +41,18 @@ const TicketExecuting: React.FC = () => {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'cpde',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',

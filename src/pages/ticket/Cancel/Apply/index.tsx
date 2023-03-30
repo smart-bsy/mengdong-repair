@@ -30,7 +30,7 @@ import {
   mockSubmitTicketList,
   mockUnSubmitTicketList,
 } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
@@ -40,27 +40,28 @@ const ticketOptions = [
   { value: 0, label: '未提交' },
   { value: 1, label: '提交' },
 ];
-
+const nullTicket: Ticket = {
+  id: 0,
+  code: '',
+  office: '',
+  applicant: '',
+  createTime: 0,
+  involvedStation: '',
+  reason: '',
+  opinion: '',
+  status: '',
+};
 const TicketList: React.FC = () => {
   const access = useAccess();
 
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState<boolean>(false);
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
 
-  const nullTicket: Ticket = {
-    id: '',
-    department: '',
-    owner: '',
-    createTime: 0,
-    involvedStation: '',
-    reason: '',
-    opinion: '',
-  };
   const [createTicketForm, setCreateTicketForm] = useState<Ticket>(nullTicket);
 
   const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<SubmitTicket[]>(mockSubmitTicketList);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
+  const [submitTicketList, setSubmitTicketList] = useState<Ticket[]>(mockSubmitTicketList);
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
 
   const [searchKey, setSearchKey] = useState<string>('');
 
@@ -106,7 +107,7 @@ const TicketList: React.FC = () => {
     setIsCreateTicketModalOpen(false);
   };
 
-  const doingColumns: ColumnsType<SubmitTicket | Ticket> = [
+  const doingColumns: ColumnsType<Ticket> = [
     {
       title: '序号',
       render: (text, record, index) => {
@@ -115,18 +116,18 @@ const TicketList: React.FC = () => {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',
@@ -228,7 +229,7 @@ const TicketList: React.FC = () => {
   };
 
   // 只能是SubmitTicket
-  const handleCreateFromOriginTicket = (record: SubmitTicket | Ticket) => {
+  const handleCreateFromOriginTicket = (record: Ticket) => {
     console.log(record);
     setCreateTicketForm(record);
     openCreateTicketModal();
@@ -311,7 +312,7 @@ const TicketList: React.FC = () => {
         footer={null}
       >
         <Descriptions title={`申请编号`} bordered>
-          <Descriptions.Item label="申请处室">{createTicketForm.department}</Descriptions.Item>
+          <Descriptions.Item label="申请处室">{createTicketForm.office}</Descriptions.Item>
           <Descriptions.Item label="申请时间">
             {dayjs().format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
@@ -378,10 +379,7 @@ const TicketList: React.FC = () => {
         <div style={{ marginTop: 15 }}>
           <Row justify={'center'} align="bottom" gutter={16}>
             <Col>
-              <Button type="primary">保存</Button>
-            </Col>
-            <Col>
-              <Button>提交</Button>
+              <Button type="primary">确认</Button>
             </Col>
           </Row>
         </div>

@@ -1,13 +1,13 @@
 import { Button, Card, Col, Modal, Row, Table, Tag } from 'antd';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
-import { SubmitTicket } from '../common/types';
 import TicketDetailModal from './TicketDetail';
 import { mockTicketDetail } from '../common/mock';
 import { useState } from 'react';
+import { Ticket } from '../common/types';
 
 const SubmitTicketList = (props: {
-  ticketList: SubmitTicket[];
+  ticketList: Ticket[];
   searchKeyWord: string;
   searchRangeDate: [string, string];
 }) => {
@@ -22,7 +22,7 @@ const SubmitTicketList = (props: {
     setIsShowTicketModalOpen(false);
   };
 
-  const submitColumns: ColumnsType<SubmitTicket> = [
+  const submitColumns: ColumnsType<Ticket> = [
     {
       title: '序号',
       render: (text, record, index) => {
@@ -31,18 +31,18 @@ const SubmitTicketList = (props: {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',
