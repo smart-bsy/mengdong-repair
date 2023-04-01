@@ -28,6 +28,14 @@ export type TicketDetail = {
   process: Process[];
 };
 
+export type SignDetail = {
+  ticketId: number;
+  node: number;
+  signer: string;
+  opinion: string;
+  status: number;
+};
+
 export const getNullTicket = (): Ticket => {
   return {
     id: 0,
@@ -41,3 +49,16 @@ export const getNullTicket = (): Ticket => {
     status: '',
   };
 };
+
+export const processNodes = {
+  apply: 0,
+  firstVerify: 1,
+  directorApproval: 2,
+  energyApproval: 3,
+  scheduleApproval: 4,
+  scheduleReceive: 5,
+  executing: 6,
+  end: 7,
+};
+
+export type CloseModal = () => void;

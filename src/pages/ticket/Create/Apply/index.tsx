@@ -30,12 +30,17 @@ import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import type { Ticket } from '../../common/types';
+import { processNodes } from '../../common/types';
 import { getNullTicket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
 const { RangePicker } = DatePicker;
 const dateFormat = 'YYYY/MM/DD';
+const ticketOptions = [
+  { value: '0', label: '未提交' },
+  { value: '1', label: '提交' },
+];
 
 const TicketList: React.FC = () => {
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState<boolean>(false);
@@ -56,11 +61,6 @@ const TicketList: React.FC = () => {
 
   const [dateRange, setDateRange] = useState<[string, string]>(['', '']);
 
-  const ticketOptions = [
-    { value: '0', label: '未提交' },
-    { value: '1', label: '提交' },
-  ];
-
   const fetchTicketList = async (
     submit: string,
     startDate?: number,
@@ -69,7 +69,13 @@ const TicketList: React.FC = () => {
   ) => {
     setIsLoadingList(true);
     try {
-      const result = await requestQueryTicketList({ submit, startDate, endDate, place });
+      const result = await requestQueryTicketList({
+        process: processNodes.apply,
+        submit,
+        startDate,
+        endDate,
+        place,
+      });
       if (result.code == 2000) {
         setTicketList(result.data);
       }

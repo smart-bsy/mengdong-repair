@@ -91,8 +91,9 @@ const SubmitTicketList = (props: { ticketList: Ticket[] }) => {
         onCancel={closeShowTicketModal}
         width={1500}
         footer={null}
+        key={curTicketId}
       >
-        <TicketDetailModal ticketId={curTicketId} />
+        <TicketDetailModal closeModal={() => {}} ticketId={curTicketId} />
       </Modal>
     </Card>
   );

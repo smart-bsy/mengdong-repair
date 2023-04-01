@@ -1,14 +1,15 @@
-import type { Ticket, TicketDetail } from '@/pages/ticket/common/types';
+import type { SignDetail, Ticket, TicketDetail } from '@/pages/ticket/common/types';
 import { request } from 'umi';
 
 export async function requestQueryTicketList(
   params: {
+    process: number;
     submit: string;
     startDate?: number;
     endDate?: number;
     place?: string;
   },
-  options?: { [key: string]: any },
+  options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket/demand', {
     method: 'GET',
@@ -19,7 +20,7 @@ export async function requestQueryTicketList(
   });
 }
 
-export async function requestCreateTicket(body: Ticket, options?: { [key: string]: any }) {
+export async function requestCreateTicket(body: Ticket, options?: Record<string, any>) {
   return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket/demand', {
     method: 'POST',
     data: body,
@@ -29,7 +30,7 @@ export async function requestCreateTicket(body: Ticket, options?: { [key: string
 
 export async function requestGetTicketById(
   params: { ticketId: number },
-  options?: { [key: string]: any },
+  options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: Ticket }>(
     `/api/ticket/demand/${params.ticketId}`,
@@ -42,7 +43,7 @@ export async function requestGetTicketById(
 
 export async function requestTicketDetail(
   params: { ticketId: number },
-  options?: { [key: string]: any },
+  options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: TicketDetail }>(
     `/api/ticket/demand/detail/${params.ticketId}`,
@@ -53,7 +54,7 @@ export async function requestTicketDetail(
   );
 }
 
-export async function requestSaveTicket(body: Ticket, options?: { [key: string]: any }) {
+export async function requestSaveTicket(body: Ticket, options?: Record<string, any>) {
   return request<{ code: number; message: string; data: TicketDetail }>(`/api/ticket/demand`, {
     method: 'PUT',
     data: body,
@@ -61,7 +62,7 @@ export async function requestSaveTicket(body: Ticket, options?: { [key: string]:
   });
 }
 
-export async function requestSubmitTicket(id: number, options?: { [key: string]: any }) {
+export async function requestSubmitTicket(id: number, options?: Record<string, any>) {
   return request<{ code: number; message: string; data: TicketDetail }>(
     `/api/ticket/demand/submit/${id}`,
     {
@@ -71,7 +72,7 @@ export async function requestSubmitTicket(id: number, options?: { [key: string]:
   );
 }
 
-export async function requestDeleteTicket(id: number, options?: { [key: string]: any }) {
+export async function requestDeleteTicket(id: number, options?: Record<string, any>) {
   return request<{ code: number; message: string; data: boolean }>(`/api/ticket/demand/${id}`, {
     method: 'DELETE',
     ...(options || {}),
@@ -90,7 +91,7 @@ export async function requestGetProcessingTicket(
     endDate?: number;
     place?: string;
   },
-  options?: { [key: string]: any },
+  options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: Ticket[] }>(
     `/api/ticket/demand/processing`,
@@ -98,6 +99,38 @@ export async function requestGetProcessingTicket(
       method: 'GET',
       params,
       ...(options || {}),
+    },
+  );
+}
+
+export async function requestSignSave(body: SignDetail, options?: Record<string, any>) {
+  return request<{ code: number; message: string; data: boolean }>('/api/process/sign', {
+    method: 'PUT',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function requestSignSubmit(body: SignDetail, options?: Record<string, any>) {
+  return request<{ code: number; message: string; data: boolean }>('/api/process/sign', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function requestSignBack(body: SignDetail, options?: Record<string, any>) {
+  return request<{ code: number; message: string; data: boolean }>('/api/process/sign/back', {
+    method: 'POST',
+    data: body,
+    ...(options || {}),
+  });
+}
+export async function requestGetSignDetail(params: { ticketId: number; node: number }) {
+  return request<{ code: number; message: string; data: SignDetail }>(
+    `/api/process/detail/${params.ticketId}/${params.node}`,
+    {
+      method: 'GET',
     },
   );
 }

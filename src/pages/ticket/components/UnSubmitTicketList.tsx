@@ -275,8 +275,9 @@ const UnSubmitTicketList = (props: {
         onCancel={closeShowTicketModal}
         width={1500}
         footer={null}
+        key={curTicketId}
       >
-        <TicketDetailModal ticketId={curTicketId} canReview={false} />
+        <TicketDetailModal closeModal={() => {}} ticketId={curTicketId} canReview={false} />
       </Modal>
     </>
   );
