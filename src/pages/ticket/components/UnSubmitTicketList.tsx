@@ -1,45 +1,42 @@
-import { Button, Col, Descriptions, Input, Modal, Popconfirm, Row, Table } from 'antd';
+import { Button, Col, Descriptions, Input, Modal, Popconfirm, Row, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
-import { useState } from 'react';
-import { mockTicketDetail, mockUnSubmitTicketList } from '../common/mock';
-import { Ticket } from '../common/types';
+import React, { useEffect, useState } from 'react';
+import type { Ticket } from '../common/types';
+import { getNullTicket } from '../common/types';
 import TicketDetailModal from './TicketDetail';
-const nullTicket: Ticket = {
-  id: '',
-  department: '',
-  owner: '',
-  createTime: 0,
-  involvedStation: '',
-  reason: '',
-  opinion: '',
-};
 
 export type TicketHandle = (ticket: Ticket) => void;
 
+export type TicketHandleById = (id: number) => void;
+
 const UnSubmitTicketList = (props: {
   ticketList: Ticket[];
-  saveHandle?: TicketHandle;
-  submitHandleHandle?: TicketHandle;
-  deleteHandle?: TicketHandle;
-  searchKeyword: string;
-  searchDateRange?: [string, string];
+  setTicketList: React.Dispatch<React.SetStateAction<Ticket[]>>;
+  saveHandle: TicketHandle;
+  submitHandle: TicketHandleById;
+  deleteHandle: TicketHandleById;
 }) => {
-  const {
-    ticketList,
-    saveHandle,
-    submitHandleHandle,
-    deleteHandle,
-    searchKeyword,
-    searchDateRange,
-  } = props;
+  const { ticketList, saveHandle, submitHandle, setTicketList, deleteHandle } = props;
 
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
   const [isEditTicketModalOpen, setIsEditTicketModalOpen] = useState<boolean>(false);
-  const [editTicketForm, setEditTicketForm] = useState<Ticket>(nullTicket);
+  const [editTicketForm, setEditTicketForm] = useState<Ticket>(getNullTicket());
 
   const [curTicketId, setCurTicketId] = useState<number>(0);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  const [isSubmiting, setIsSubmiting] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    if (ticketList?.length > 0) {
+      setIsSubmiting(new Array<boolean>(ticketList.length));
+    }
+  }, [ticketList]);
 
   const openShowTicketModal = (id: number): void => {
     setCurTicketId(id);
@@ -49,8 +46,13 @@ const UnSubmitTicketList = (props: {
   const closeShowTicketModal = (): void => {
     setIsShowTicketModalOpen(false);
   };
-  const openEditTicketModal = (): void => {
-    setEditTicketForm(mockUnSubmitTicketList[0]);
+  const openEditTicketModal = (id: number): void => {
+    setEditTicketForm(
+      ticketList.filter((item) => {
+        return item.id == id;
+      })[0],
+    );
+    setCurTicketId(id);
     setIsEditTicketModalOpen(true);
   };
 
@@ -62,6 +64,45 @@ const UnSubmitTicketList = (props: {
     setEditTicketForm((prev) => {
       return { ...prev, [name]: value };
     });
+  };
+
+  const removeItem = (id: number) => {
+    setTicketList((list) => {
+      return list.filter((item) => {
+        return item.id != id;
+      });
+    });
+  };
+
+  const submitTicket = async (id: number, index: number) => {
+    try {
+      setIsSubmiting((list) => {
+        list[index] = true;
+        return [...list];
+      });
+      await submitHandle(id);
+      messageApi.success('提交成功');
+      removeItem(id);
+    } catch (error) {
+      console.log(error);
+      messageApi.error('提交失败');
+    } finally {
+      setIsSubmiting((list) => {
+        list[index] = false;
+        return [...list];
+      });
+    }
+  };
+
+  const deleteTicketHandler = async (id: number) => {
+    try {
+      await deleteHandle(id);
+      messageApi.success('删除成功');
+      removeItem(id);
+    } catch (error) {
+      console.log(error);
+      messageApi.error('删除失败');
+    }
   };
 
   const unSubmitColumns: ColumnsType<Ticket> = [
@@ -108,7 +149,7 @@ const UnSubmitTicketList = (props: {
       title: '操作',
       key: 'id',
       dataIndex: 'id',
-      render: (id) => {
+      render: (id, record, index) => {
         return (
           <Row gutter={10}>
             <Col>
@@ -122,16 +163,30 @@ const UnSubmitTicketList = (props: {
               </Button>
             </Col>
             <Col>
-              <Button onClick={openEditTicketModal}>编辑</Button>
+              <Button
+                onClick={() => {
+                  openEditTicketModal(id);
+                }}
+              >
+                编辑
+              </Button>
             </Col>
             <Col>
-              <Button onClick={() => {}}>提交</Button>
+              <Button
+                onClick={() => {
+                  submitTicket(id, index);
+                }}
+                loading={isSubmiting[index]}
+              >
+                提交
+              </Button>
             </Col>
             <Col>
               <Popconfirm
                 title={'删除该需求单'}
-                onConfirm={() => {}}
-                onCancel={() => {}}
+                onConfirm={() => {
+                  deleteTicketHandler(id);
+                }}
                 okText="Yes"
                 cancelText="No"
               >
@@ -144,10 +199,31 @@ const UnSubmitTicketList = (props: {
     },
   ];
 
-  const saveTicketHandler = () => {};
+  const saveTicketHandler = async () => {
+    try {
+      setIsSaving(true);
+      await saveHandle(editTicketForm);
+      closeEditTicketModal();
+      setTicketList((list) => {
+        return list.map((item) => {
+          if (item.id == editTicketForm.id) {
+            item.reason = editTicketForm.reason;
+            item.involvedStation = editTicketForm.involvedStation;
+          }
+          return { ...item };
+        });
+      });
+      messageApi.success('保存成功');
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <>
+      {contextHolder}
       <Table columns={unSubmitColumns} dataSource={ticketList} />
       <Modal
         title="场站参数设置"
@@ -156,7 +232,7 @@ const UnSubmitTicketList = (props: {
         onCancel={closeEditTicketModal}
         footer={null}
       >
-        <Descriptions title={`申请编号: ${mockTicketDetail.ticket.id}`} bordered>
+        <Descriptions title={`申请编号: ${editTicketForm.code}`} bordered>
           <Descriptions.Item label="申请处室">{editTicketForm.office}</Descriptions.Item>
           <Descriptions.Item label="申请时间">
             {dayjs(editTicketForm.createTime).format('YYYY-MM-DD HH:mm')}
@@ -185,7 +261,7 @@ const UnSubmitTicketList = (props: {
           <div style={{ marginTop: 15 }}>
             <Row justify={'center'} align="bottom" gutter={16}>
               <Col>
-                <Button type="primary" onClick={saveTicketHandler}>
+                <Button type="primary" onClick={saveTicketHandler} loading={isSaving}>
                   保存
                 </Button>
               </Col>

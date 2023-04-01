@@ -1,4 +1,10 @@
-import { requestCreateTicket, requestQueryTicketList } from '@/services/ticket/apply/api';
+import {
+  requestCreateTicket,
+  requestDeleteTicket,
+  requestQueryTicketList,
+  requestSaveTicket,
+  requestSubmitTicket,
+} from '@/services/ticket/apply/api';
 import {
   Loading3QuartersOutlined,
   PlusOutlined,
@@ -23,8 +29,8 @@ import {
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import { mockSubmitTicketList, mockUnSubmitTicketList } from '../../common/mock';
-import { getNullTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
+import { getNullTicket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
@@ -68,6 +74,7 @@ const TicketList: React.FC = () => {
         setTicketList(result.data);
       }
     } catch (error) {
+      messageApi.error('加载失败');
       console.log(error);
     } finally {
       setIsLoadingList(false);
@@ -82,6 +89,15 @@ const TicketList: React.FC = () => {
   useEffect(() => {
     fetchTicketList(ticketType);
   }, [ticketType]);
+
+  const searchTicketList = () => {
+    fetchTicketList(
+      ticketType,
+      dateRange[0] == '' ? 0 : dayjs(dateRange[0], 'YYYY/MM/DD').valueOf(),
+      dateRange[1] == '' ? 0 : dayjs(dateRange[1], 'YYYY/MM/DD').valueOf(),
+      searchKey,
+    );
+  };
 
   const openCreateTicketModal = (): void => {
     const ticket: Ticket = getNullTicket();
@@ -111,38 +127,27 @@ const TicketList: React.FC = () => {
     setTicketType(value);
   };
 
-  const filterTicketList = (): void => {
-    let list: Ticket[] = ticketList.filter((item) => {
-      return item.involvedStation.indexOf(searchKey) >= 0;
-    });
-    if (dateRange[0].length > 0 && dateRange[1].length > 0) {
-      list = list.filter((item) => {
-        return (
-          item.createTime >= dayjs(dateRange[0], 'YYYY/MM/DD').millisecond() &&
-          item.createTime <= dayjs(dateRange[1], 'YYYY/MM/DD').millisecond()
-        );
-      });
+  const saveTicketHandle = async (ticket: Ticket) => {
+    const res = await requestSaveTicket(ticket);
+    if (res.code == 2000) {
+    } else {
+      throw new Error('保存失败');
     }
-    setTicketList(list);
   };
 
-  const getTableNode = (type: string): React.ReactNode => {
-    if (type == '0') {
-      return (
-        <UnSubmitTicketList
-          ticketList={ticketList}
-          saveHandle={(ticket: Ticket) => {}}
-          submitHandleHandle={(ticket: Ticket) => {}}
-          deleteHandle={(ticket: Ticket) => {}}
-          searchKeyword={''}
-          searchDateRange={['', '']}
-        />
-      );
+  const submitTicketHandle = async (id: number) => {
+    const result = await requestSubmitTicket(id);
+    if (result.code == 2000) {
+    } else {
+      throw new Error('提交失败');
     }
-    if (type == '1') {
-      return (
-        <SubmitTicketList ticketList={ticketList} searchKeyWord={''} searchRangeDate={['', '']} />
-      );
+  };
+
+  const deleteTicketHandle = async (id: number) => {
+    const result = await requestDeleteTicket(id);
+    if (result.code == 2000) {
+    } else {
+      throw new Error('删除失败');
     }
   };
 
@@ -192,7 +197,7 @@ const TicketList: React.FC = () => {
               />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={searchTicketList}>
                 查询
               </Button>
             </Col>
@@ -227,7 +232,23 @@ const TicketList: React.FC = () => {
             </Spin>
           </>
         ) : (
-          getTableNode(ticketType)
+          <>
+            {ticketType == '0' ? (
+              <>
+                <UnSubmitTicketList
+                  ticketList={ticketList}
+                  setTicketList={setTicketList}
+                  saveHandle={saveTicketHandle}
+                  submitHandle={submitTicketHandle}
+                  deleteHandle={deleteTicketHandle}
+                />
+              </>
+            ) : (
+              <>
+                <SubmitTicketList ticketList={ticketList} />
+              </>
+            )}
+          </>
         )}
       </Card>
       <Modal

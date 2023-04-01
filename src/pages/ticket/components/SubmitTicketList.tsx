@@ -2,19 +2,16 @@ import { Button, Card, Col, Modal, Row, Table, Tag } from 'antd';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 import TicketDetailModal from './TicketDetail';
-import { mockTicketDetail } from '../common/mock';
 import { useState } from 'react';
-import { Ticket } from '../common/types';
+import type { Ticket } from '../common/types';
 
-const SubmitTicketList = (props: {
-  ticketList: Ticket[];
-  searchKeyWord: string;
-  searchRangeDate: [string, string];
-}) => {
-  const { ticketList, searchKeyWord, searchRangeDate } = props;
+const SubmitTicketList = (props: { ticketList: Ticket[] }) => {
+  const { ticketList } = props;
   const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
+  const [curTicketId, setCurTicketId] = useState<number>(0);
 
-  const openShowTicketModal = (): void => {
+  const openShowTicketModal = (id: number): void => {
+    setCurTicketId(id);
     setIsShowTicketModalOpen(true);
   };
 
@@ -63,18 +60,6 @@ const SubmitTicketList = (props: {
       key: 'reason',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        return (
-          <>
-            <Tag color={status == '通过' ? 'blue' : 'red'}>{status}</Tag>
-          </>
-        );
-      },
-    },
-    {
       title: '操作',
       key: 'id',
       dataIndex: 'id',
@@ -82,7 +67,12 @@ const SubmitTicketList = (props: {
         return (
           <Row gutter={10}>
             <Col>
-              <Button type="primary" onClick={openShowTicketModal}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  openShowTicketModal(id);
+                }}
+              >
                 详情
               </Button>
             </Col>
@@ -98,12 +88,11 @@ const SubmitTicketList = (props: {
       <Modal
         title="场站参数详情"
         open={isShowTicketModalOpen}
-        onOk={openShowTicketModal}
         onCancel={closeShowTicketModal}
         width={1500}
         footer={null}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} />
+        <TicketDetailModal ticketId={curTicketId} />
       </Modal>
     </Card>
   );

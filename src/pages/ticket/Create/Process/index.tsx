@@ -1,90 +1,56 @@
+import { requestGetProcessingTicket } from '@/services/ticket/apply/api';
 import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Descriptions, Input, Modal, Row } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
+import { Button, Card, Col, Input, Row, message, Spin } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { mockDoingTicketList, mockSubmitTicketList } from '../../common/mock';
-import { SubmitTicket, Ticket } from '../../common/types';
+import type { Ticket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 
 const TicketProcess: React.FC = () => {
-  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<SubmitTicket[]>(mockDoingTicketList);
-
-  const nullTicket: Ticket = {
-    id: '',
-    department: '',
-    owner: '',
-    createTime: 0,
-    involvedStation: '',
-    reason: '',
-    opinion: '',
-  };
+  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>([]);
 
   const [searchKey, setSearchKey] = useState<string>('');
 
-  useEffect(() => {
-    if (isShowTicketModalOpen) {
-      console.log('fetch ticket detail from server');
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const fetchTicketList = async (place: string, startDate: number, endDate: number) => {
+    try {
+      setIsLoadingList(true);
+      const result = await requestGetProcessingTicket({
+        startDate,
+        endDate,
+        place,
+      });
+      if (result.code == 2000) {
+        setDoingTicketList(result.data);
+      } else {
+      }
+    } catch (error) {
+      console.log(error);
+      messageApi.error('加载失败');
+    } finally {
+      setIsLoadingList(false);
     }
-  }, [isShowTicketModalOpen]);
-
-  const doingColumns: ColumnsType<SubmitTicket | Ticket> = [
-    {
-      title: '序号',
-      render: (text, record, index) => {
-        return <span>{index + 1}</span>;
-      },
-    },
-    {
-      title: '编号',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
-    },
-    {
-      title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
-    },
-    {
-      title: '申请时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (createTime) => {
-        return <span>{dayjs(createTime).format('YYYY-MM-DD HH:mm')}</span>;
-      },
-    },
-    {
-      title: '涉及场站',
-      dataIndex: 'involvedStation',
-      key: 'createTime',
-    },
-    {
-      title: '申请原因',
-      dataIndex: 'reason',
-      key: 'reason',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-    },
-  ];
-
-  const refresh = (): void => {
-    console.log('刷新列表');
   };
 
-  const filterTicketList = (): void => {};
+  useEffect(() => {
+    fetchTicketList('', 0, 0);
+  }, []);
+
+  const refresh = (): void => {
+    setSearchKey('');
+    fetchTicketList('', 0, 0);
+  };
+
+  const searchTicketList = (): void => {
+    fetchTicketList(searchKey, 0, 0);
+  };
 
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
@@ -98,7 +64,7 @@ const TicketProcess: React.FC = () => {
               />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={searchTicketList}>
                 查询
               </Button>
             </Col>
@@ -111,11 +77,15 @@ const TicketProcess: React.FC = () => {
         </Row>
       </Card>
       <Card>
-        <SubmitTicketList
-          ticketList={doingTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
+        {isLoadingList ? (
+          <>
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
+          </>
+        ) : (
+          <SubmitTicketList ticketList={doingTicketList} />
+        )}
       </Card>
     </PageContainer>
   );

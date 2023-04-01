@@ -10,10 +10,8 @@ export type Ticket = {
   status: string;
 };
 export type Process = {
-  id: number;
-  principal: User;
-  status: number;
-  result: number;
+  name: string;
+  position: number;
 };
 export type OperationLog = {
   id: number;
@@ -26,8 +24,8 @@ export type User = {
 };
 export type TicketDetail = {
   ticket: Ticket;
-  user: User;
-  processes: Process[];
+  cur: number;
+  process: Process[];
 };
 
 export const getNullTicket = (): Ticket => {

@@ -1,9 +1,24 @@
-import { Button, Card, Checkbox, Col, Descriptions, Input, Modal, Radio, Row, Steps } from 'antd';
+import { requestTicketDetail } from '@/services/ticket/apply/api';
+import type { StepProps } from 'antd';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Col,
+  Descriptions,
+  Input,
+  message,
+  Modal,
+  Radio,
+  Row,
+  Steps,
+} from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { mockOperationLogs } from '../common/mock';
-import { TicketDetail } from '../common/types';
+import type { TicketDetail } from '../common/types';
+import { getNullTicket, Process } from '../common/types';
 import OperationLogList from './OperationLogs';
 
 interface TicketDetailComProps {
@@ -14,6 +29,12 @@ interface TicketDetailComProps {
   canSign?: boolean;
   canReceive?: boolean;
 }
+
+const nullTicketDetail: TicketDetail = {
+  ticket: getNullTicket(),
+  cur: -1,
+  process: [],
+};
 
 const TicketDetailModal = ({
   ticketId,
@@ -29,13 +50,65 @@ const TicketDetailModal = ({
   const [isShowNodeModalOpen, setIsShowNodeModalOpen] = useState<boolean>(false);
   const [nodeDetail, setNodeDetail] = useState();
 
-  const [ticketDetail, setTicketDetail] = useState<>();
+  const [ticketDetail, setTicketDetail] = useState<TicketDetail>(nullTicketDetail);
 
-  useEffect(() => {}, []);
+  const [messageApi, contextHolder] = message.useMessage();
 
-  const openShowNodeModal = (): void => {
+  const [stepItem, setStepItem] = useState<StepProps[]>([]);
+
+  const fetchTicketDetail = async () => {
+    try {
+      const res = await requestTicketDetail({ ticketId });
+      setTicketDetail(res.data);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+      messageApi.error('加载错误，请稍后重试');
+    }
+  };
+
+  const fetchProcessNode = async (position: number) => {
+    console.log(position);
+  };
+
+  const openShowNodeModal = async (pos: number) => {
+    await fetchProcessNode(pos);
     setIsShowNodeModalOpen(true);
   };
+
+  // 初始查询
+  useEffect(() => {
+    fetchTicketDetail();
+  }, []);
+
+  useEffect(() => {
+    if (ticketDetail != nullTicketDetail) {
+      const si: StepProps[] = ticketDetail.process.map((item) => {
+        return {
+          title: item.name,
+          description: (
+            <>
+              {ticketDetail.cur > item.position ? (
+                <Button
+                  style={{ marginLeft: -15, marginTop: 10 }}
+                  shape="round"
+                  type="primary"
+                  onClick={() => {
+                    openShowNodeModal(item.position);
+                  }}
+                >
+                  详情
+                </Button>
+              ) : (
+                '等待中'
+              )}
+            </>
+          ),
+        };
+      });
+      setStepItem(si);
+    }
+  }, [ticketDetail]);
 
   const closeShowNodeModal = (): void => {
     setIsShowNodeModalOpen(false);
@@ -49,14 +122,11 @@ const TicketDetailModal = ({
     setIsOperationLogModalOpen(false);
   };
 
-  useEffect(() => {
-    console.log(canReview);
-  }, []);
-
   return (
     <Card>
-      <Descriptions title={`申请编号: ${ticketDetail.ticket.id}`} bordered>
-        <Descriptions.Item label="申请处室">{ticketDetail.ticket.department}</Descriptions.Item>
+      {contextHolder}
+      <Descriptions title={`申请编号: ${ticketDetail.ticket.code}`} bordered>
+        <Descriptions.Item label="申请处室">{ticketDetail.ticket.office}</Descriptions.Item>
         <Descriptions.Item label="申请时间">
           {dayjs(ticketDetail.ticket.createTime).format('YYYY-MM-DD HH:mm')}
         </Descriptions.Item>
@@ -68,113 +138,7 @@ const TicketDetailModal = ({
       </Descriptions>
       <Card style={{ marginTop: 15 }}>流程进度</Card>
       <Card>
-        <Steps
-          current={2}
-          status="error"
-          items={[
-            {
-              title: '申请',
-              description: (
-                <>
-                  <Button style={{ marginLeft: -15, marginTop: 10 }} shape="round" type="primary">
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '初审',
-              description: (
-                <>
-                  <Button
-                    onClick={() => {
-                      openShowNodeModal();
-                    }}
-                    style={{ marginLeft: -15, marginTop: 10 }}
-                    shape="round"
-                    type="primary"
-                  >
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '主任审批',
-              description: (
-                <>
-                  <Button
-                    onClick={() => {
-                      openShowNodeModal();
-                    }}
-                    style={{ marginLeft: -15, marginTop: 10 }}
-                    shape="round"
-                    type="primary"
-                  >
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '新能源会签',
-              description: (
-                <>
-                  <Button
-                    onClick={() => {
-                      openShowNodeModal();
-                    }}
-                    style={{ marginLeft: -15, marginTop: 10 }}
-                    shape="round"
-                    type="primary"
-                  >
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '调度会签',
-              description: (
-                <>
-                  <Button
-                    onClick={() => {
-                      openShowNodeModal();
-                    }}
-                    style={{ marginLeft: -15, marginTop: 10 }}
-                    shape="round"
-                    type="primary"
-                  >
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '调度签收',
-              description: (
-                <>
-                  <Button
-                    onClick={() => {
-                      openShowNodeModal();
-                    }}
-                    style={{ marginLeft: -15, marginTop: 10 }}
-                    shape="round"
-                    type="primary"
-                  >
-                    详情
-                  </Button>
-                </>
-              ),
-            },
-            {
-              title: '执行中',
-            },
-            {
-              title: '结束',
-            },
-          ]}
-        />
+        <Steps current={ticketDetail.cur} status="process" items={stepItem} />
       </Card>
       {canReview && (
         <div style={{ marginTop: 15 }}>

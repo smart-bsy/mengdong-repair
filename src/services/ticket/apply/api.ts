@@ -1,4 +1,4 @@
-import type { Ticket } from '@/pages/ticket/common/types';
+import type { Ticket, TicketDetail } from '@/pages/ticket/common/types';
 import { request } from 'umi';
 
 export async function requestQueryTicketList(
@@ -35,6 +35,68 @@ export async function requestGetTicketById(
     `/api/ticket/demand/${params.ticketId}`,
     {
       method: 'GET',
+      ...(options || {}),
+    },
+  );
+}
+
+export async function requestTicketDetail(
+  params: { ticketId: number },
+  options?: { [key: string]: any },
+) {
+  return request<{ code: number; message: string; data: TicketDetail }>(
+    `/api/ticket/demand/detail/${params.ticketId}`,
+    {
+      method: 'GET',
+      ...(options || {}),
+    },
+  );
+}
+
+export async function requestSaveTicket(body: Ticket, options?: { [key: string]: any }) {
+  return request<{ code: number; message: string; data: TicketDetail }>(`/api/ticket/demand`, {
+    method: 'PUT',
+    data: body,
+    ...(options || {}),
+  });
+}
+
+export async function requestSubmitTicket(id: number, options?: { [key: string]: any }) {
+  return request<{ code: number; message: string; data: TicketDetail }>(
+    `/api/ticket/demand/submit/${id}`,
+    {
+      method: 'POST',
+      ...(options || {}),
+    },
+  );
+}
+
+export async function requestDeleteTicket(id: number, options?: { [key: string]: any }) {
+  return request<{ code: number; message: string; data: boolean }>(`/api/ticket/demand/${id}`, {
+    method: 'DELETE',
+    ...(options || {}),
+  });
+}
+
+/**
+ * 查询流程中的票务
+ * @param id
+ * @param options
+ * @returns
+ */
+export async function requestGetProcessingTicket(
+  params: {
+    startDate?: number;
+    endDate?: number;
+    place?: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<{ code: number; message: string; data: Ticket[] }>(
+    `/api/ticket/demand/processing`,
+    {
+      method: 'GET',
+      params,
       ...(options || {}),
     },
   );
