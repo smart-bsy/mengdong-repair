@@ -1,4 +1,5 @@
 import {
+  requestGetProcessNodeDetailList,
   requestGetSignDetail,
   requestSignBack,
   requestSignSave,
@@ -6,14 +7,22 @@ import {
   requestTicketDetail,
 } from '@/services/ticket/apply/api';
 import type { StepProps } from 'antd';
-import { Button, Card, Col, Descriptions, Input, message, Modal, Radio, Row, Steps } from 'antd';
+import { Table } from 'antd';
+import { Button, Card, Col, Descriptions, message, Modal, Row, Steps } from 'antd';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { mockOperationLogs } from '../common/mock';
-import type { TicketDetail, SignDetail, CloseModal } from '../common/types';
+import type {
+  TicketDetail,
+  SignDetail,
+  CloseModal,
+  ProcessNode,
+  OperationLog,
+} from '../common/types';
 import { getNullTicket } from '../common/types';
 import OperationLogList from './OperationLogs';
+import type { ColumnsType } from 'antd/es/table';
 
 interface TicketDetailComProps {
   ticketId: number;
@@ -51,10 +60,8 @@ const TicketDetailModal = ({
   closeModal,
 }: TicketDetailComProps) => {
   const [isOperationLogModalOpen, setIsOperationLogModalOpen] = useState<boolean>();
-  const [operationLogs, setOperationLogs] = useState();
 
   const [isShowNodeModalOpen, setIsShowNodeModalOpen] = useState<boolean>(false);
-  const [nodeDetail, setNodeDetail] = useState();
 
   const [ticketDetail, setTicketDetail] = useState<TicketDetail>(nullTicketDetail);
 
@@ -69,6 +76,8 @@ const TicketDetailModal = ({
   const [signSubBtn, setSignSubBtn] = useState<boolean>(false);
 
   const [signBackBtn, setSignBackBtn] = useState<boolean>(false);
+
+  const [processNodeDetailList, setProcessNodeDetailList] = useState<ProcessNode[]>([]);
 
   const handleSignDetailChange = (key: string, value: any): void => {
     setSignForm((prev) => {
@@ -114,18 +123,19 @@ const TicketDetailModal = ({
   const fetchSignDetail = async (tid: number, node: number) => {
     try {
       const result = await requestGetSignDetail({ ticketId: tid, node });
-      console.log(result);
       if (result.code == 2000) {
         // TODO 权限控制
         handleSignDetailChange('opinion', result.data.opinion);
       }
     } catch (error) {
       console.log(error);
+      messageApi.error('加载失败');
     }
   };
 
   const fetchSignBack = async (body: SignDetail) => {
     try {
+      setSignBackBtn(true);
       const result = await requestSignBack(body);
       if (result.data) {
         messageApi.success('退回成功');
@@ -136,6 +146,8 @@ const TicketDetailModal = ({
     } catch (error) {
       console.log(error);
       messageApi.error('操作失败');
+    } finally {
+      setSignBackBtn(false);
     }
   };
 
@@ -153,12 +165,23 @@ const TicketDetailModal = ({
     }
   };
 
-  const fetchProcessNode = async (position: number) => {
-    console.log(position);
+  const fetchProcessNode = async (tid: number, node: number) => {
+    try {
+      const result = await requestGetProcessNodeDetailList({ ticketId: tid, node });
+      if (result.code == 2000) {
+        console.log(result.data);
+        setProcessNodeDetailList(result.data);
+      } else {
+        messageApi.error(result.message);
+      }
+    } catch (error) {
+      console.log(error);
+      messageApi.error('加载失败');
+    }
   };
 
-  const openShowNodeModal = async (pos: number) => {
-    await fetchProcessNode(pos);
+  const openShowNodeModal = async (node: number) => {
+    await fetchProcessNode(ticketDetail.ticket.id, node);
     setIsShowNodeModalOpen(true);
   };
 
@@ -196,6 +219,46 @@ const TicketDetailModal = ({
       fetchSignDetail(ticketDetail.ticket.id, ticketDetail.cur);
     }
   }, [ticketDetail]);
+
+  const processNodeDetailColumn: ColumnsType<ProcessNode> = [
+    {
+      title: '序号',
+      render: (text, record, index) => {
+        return <span>{index + 1}</span>;
+      },
+    },
+    {
+      title: '签字人',
+      dataIndex: 'signer',
+      key: 'signer',
+    },
+    {
+      title: '签字时间',
+      dataIndex: 'signTime',
+      key: 'signTime',
+      render: (signTime) => {
+        return <span>{dayjs(signTime).format('YYYY-MM-DD HH:mm')}</span>;
+      },
+    },
+    {
+      title: '所属节点',
+      dataIndex: 'node',
+      key: 'node',
+    },
+    {
+      title: '签字类型',
+      dataIndex: 'signType',
+      key: 'signType',
+    },
+    {
+      title: 'opinion',
+      dataIndex: 'opinion',
+      key: 'opinion',
+      render: (opinion) => {
+        return <TextArea value={opinion} disabled />;
+      },
+    },
+  ];
 
   const closeShowNodeModal = (): void => {
     setIsShowNodeModalOpen(false);
@@ -296,7 +359,12 @@ const TicketDetailModal = ({
           <Card>
             <Descriptions bordered>
               <Descriptions.Item label="新能源会签意见">
-                <TextArea rows={4} />
+                <TextArea
+                  rows={4}
+                  onChange={({ target }) => {
+                    handleSignDetailChange('opinion', target.value);
+                  }}
+                />
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -310,7 +378,12 @@ const TicketDetailModal = ({
               <br />
               <br />
               <Descriptions.Item label="调度控制专业意见">
-                <TextArea rows={4} />
+                <TextArea
+                  rows={4}
+                  onChange={({ target }) => {
+                    handleSignDetailChange('opinion', target.value);
+                  }}
+                />
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -321,7 +394,7 @@ const TicketDetailModal = ({
           <Card>
             <Descriptions bordered>
               <Descriptions.Item label="签收人">明德才</Descriptions.Item>
-              <Descriptions.Item label="签收时间">{'2023-03-28 19:12:00'}</Descriptions.Item>
+              <Descriptions.Item label="签收时间">{dayjs().format('YYYY-MM-DD')}</Descriptions.Item>
             </Descriptions>
           </Card>
         </div>
@@ -359,24 +432,32 @@ const TicketDetailModal = ({
           {canEnergy && (
             <>
               <Col>
-                <Button>提交</Button>
+                <Button loading={signSubBtn} onClick={signSubmit}>
+                  提交
+                </Button>
               </Col>
             </>
           )}
           {canSign && (
             <>
               <Col>
-                <Button>签字</Button>
+                <Button onClick={signSave} loading={signSaveBtn}>
+                  签字
+                </Button>
               </Col>
               <Col>
-                <Button>最终签字</Button>
+                <Button onClick={signSubmit} loading={signSubBtn}>
+                  最终签字
+                </Button>
               </Col>
             </>
           )}
           {canReceive && (
             <>
               <Col>
-                <Button>签收</Button>
+                <Button onClick={signSubmit} loading={signSubBtn}>
+                  签收
+                </Button>
               </Col>
             </>
           )}
@@ -395,24 +476,17 @@ const TicketDetailModal = ({
         footer={null}
       >
         <Card>
-          <OperationLogList logs={mockOperationLogs} />
+          <OperationLogList ticketId={ticketId} />
         </Card>
       </Modal>
       <Modal
-        title=""
+        title="需求单会签详情查询"
         open={isShowNodeModalOpen}
         width={1000}
         onCancel={closeShowNodeModal}
         footer={null}
       >
-        <Descriptions title={'需求单会签详情查询'} bordered>
-          <Descriptions.Item label="序号">1</Descriptions.Item>
-          <Descriptions.Item label="签字人">李四</Descriptions.Item>
-          <Descriptions.Item label="签字时间">2023-03-22 22:00</Descriptions.Item>
-          <Descriptions.Item label="所属节点">测试节点</Descriptions.Item>
-          <Descriptions.Item label="会签类型">啥类型呀</Descriptions.Item>
-          <Descriptions.Item label="会签意见">{'会签意见'}</Descriptions.Item>
-        </Descriptions>
+        <Table columns={processNodeDetailColumn} dataSource={processNodeDetailList} />
       </Modal>
     </Card>
   );

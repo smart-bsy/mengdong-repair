@@ -15,7 +15,12 @@ export type Process = {
 };
 export type OperationLog = {
   id: number;
-  content: string;
+  ticketId: number;
+  code: string;
+  user: string;
+  type: string;
+  createTime: number;
+  ip: string;
 };
 export type User = {
   id: number;
@@ -34,6 +39,14 @@ export type SignDetail = {
   signer: string;
   opinion: string;
   status: number;
+};
+
+export type ProcessNode = {
+  signer: string;
+  signTime: number;
+  signType: string;
+  opinion: string;
+  node: string;
 };
 
 export const getNullTicket = (): Ticket => {

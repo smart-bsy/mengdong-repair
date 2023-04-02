@@ -1,4 +1,10 @@
-import type { SignDetail, Ticket, TicketDetail } from '@/pages/ticket/common/types';
+import type {
+  OperationLog,
+  ProcessNode,
+  SignDetail,
+  Ticket,
+  TicketDetail,
+} from '@/pages/ticket/common/types';
 import { request } from 'umi';
 
 export async function requestQueryTicketList(
@@ -126,9 +132,28 @@ export async function requestSignBack(body: SignDetail, options?: Record<string,
     ...(options || {}),
   });
 }
+
 export async function requestGetSignDetail(params: { ticketId: number; node: number }) {
   return request<{ code: number; message: string; data: SignDetail }>(
     `/api/process/detail/${params.ticketId}/${params.node}`,
+    {
+      method: 'GET',
+    },
+  );
+}
+
+export async function requestGetProcessNodeDetailList(params: { ticketId: number; node: number }) {
+  return request<{ code: number; message: string; data: ProcessNode[] }>(
+    `/api/process/detail/list/${params.ticketId}/${params.node}`,
+    {
+      method: 'GET',
+    },
+  );
+}
+
+export async function requestGetOperationLogs(params: { ticketId: number }) {
+  return request<{ code: number; message: string; data: OperationLog[] }>(
+    `/api/log/${params.ticketId}`,
     {
       method: 'GET',
     },

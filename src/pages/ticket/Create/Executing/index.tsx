@@ -1,38 +1,85 @@
 import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Descriptions, Input, Modal, Row } from 'antd';
+import { Button, Card, Col, message, Input, Modal, Row, Select, Table, Spin } from 'antd';
+import { useEffect, useState } from 'react';
+import type { Ticket } from '../../common/types';
+import { processNodes } from '../../common/types';
+import SubmitTicketList from '../../components/SubmitTicketList';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
-import { mockDoingTicketList, mockSubmitTicketList } from '../../common/mock';
-import type { Ticket } from '../../common/types';
-import SubmitTicketList from '../../components/SubmitTicketList';
+import TicketDetailModal from '../../components/TicketDetail';
+import { requestQueryTicketList } from '@/services/ticket/apply/api';
 
-const nullTicket: Ticket = {
-  id: 0,
-  code: '',
-  office: '',
-  applicant: '',
-  createTime: 0,
-  involvedStation: '',
-  reason: '',
-  opinion: '',
-  status: '',
-};
+const ticketOptions = [
+  { value: '0', label: '未提交' },
+  { value: '1', label: '提交' },
+];
 
-const TicketExecuting: React.FC = () => {
-  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
-
+const TicketReview: React.FC = () => {
   const [searchKey, setSearchKey] = useState<string>('');
 
-  useEffect(() => {
-    if (isShowTicketModalOpen) {
-      console.log('fetch ticket detail from server');
-    }
-  }, [isShowTicketModalOpen]);
+  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
 
-  const doingColumns: ColumnsType<Ticket> = [
+  const [ticketType, setTicketType] = useState<string>('0');
+
+  const [ticketList, setTicketList] = useState<Ticket[]>([]);
+
+  const [curTicketId, setCurTicketId] = useState<number>(0);
+
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const fetchTicketList = async (
+    submit: string,
+    startDate?: number,
+    endDate?: number,
+    place?: string,
+  ) => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestQueryTicketList({
+        process: processNodes.executing,
+        submit,
+        startDate,
+        endDate,
+        place,
+      });
+      if (result.code == 2000) {
+        setTicketList(result.data);
+      }
+    } catch (error) {
+      messageApi.error('加载失败');
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  const refresh = (): void => {
+    setSearchKey('');
+    fetchTicketList(ticketType);
+  };
+
+  const handleTicketTypeChange = (value: string): void => {
+    setTicketType(value);
+  };
+
+  const openShowTicketModal = (id: number): void => {
+    setCurTicketId(id);
+    setIsShowTicketModalOpen(true);
+  };
+
+  const closeShowTicketModal = (): void => {
+    setIsShowTicketModalOpen(false);
+  };
+
+  const closeRefreshShowTicketModal = (): void => {
+    refresh();
+    setIsShowTicketModalOpen(false);
+  };
+
+  const unSubmitColumns: ColumnsType<Ticket> = [
     {
       title: '序号',
       render: (text, record, index) => {
@@ -41,7 +88,7 @@ const TicketExecuting: React.FC = () => {
     },
     {
       title: '编号',
-      dataIndex: 'cpde',
+      dataIndex: 'code',
       key: 'code',
     },
     {
@@ -73,20 +120,43 @@ const TicketExecuting: React.FC = () => {
       key: 'reason',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: '操作',
+      key: 'id',
+      dataIndex: 'id',
+      render: (id) => {
+        return (
+          <Row gutter={10}>
+            <Col>
+              <Button
+                type="primary"
+                onClick={() => {
+                  openShowTicketModal(id);
+                }}
+              >
+                详情
+              </Button>
+            </Col>
+          </Row>
+        );
+      },
     },
   ];
 
-  const refresh = (): void => {
-    console.log('刷新列表');
-  };
+  useEffect(() => {
+    fetchTicketList(ticketOptions[0].value);
+  }, []);
 
-  const filterTicketList = (): void => {};
+  useEffect(() => {
+    fetchTicketList(ticketType);
+  }, [ticketType]);
+
+  const search = () => {
+    fetchTicketList(ticketType, 0, 0, searchKey);
+  };
 
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
@@ -100,11 +170,21 @@ const TicketExecuting: React.FC = () => {
               />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={search}>
                 查询
               </Button>
             </Col>
           </Row>
+          <Col>
+            <Select
+              defaultValue={'未提交'}
+              style={{ width: 120 }}
+              options={ticketOptions}
+              onChange={(target) => {
+                handleTicketTypeChange(target);
+              }}
+            />
+          </Col>
           <Col>
             <Button icon={<Loading3QuartersOutlined />} onClick={refresh}>
               刷新
@@ -113,10 +193,38 @@ const TicketExecuting: React.FC = () => {
         </Row>
       </Card>
       <Card>
-        <SubmitTicketList ticketList={doingTicketList} />
+        {isLoadingList ? (
+          <>
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
+          </>
+        ) : (
+          <>
+            {ticketType == '0' ? (
+              <>
+                <Table columns={unSubmitColumns} dataSource={ticketList} />
+              </>
+            ) : (
+              <>
+                <SubmitTicketList ticketList={ticketList} />
+              </>
+            )}
+          </>
+        )}
       </Card>
+      <Modal
+        title="场站参数详情"
+        open={isShowTicketModalOpen}
+        onCancel={closeShowTicketModal}
+        width={1500}
+        footer={null}
+        key={curTicketId}
+      >
+        <TicketDetailModal closeModal={closeRefreshShowTicketModal} ticketId={curTicketId} />
+      </Modal>
     </PageContainer>
   );
 };
 
-export default TicketExecuting;
+export default TicketReview;
