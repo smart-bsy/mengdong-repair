@@ -12,14 +12,7 @@ import { Button, Card, Col, Descriptions, message, Modal, Row, Steps } from 'ant
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { mockOperationLogs } from '../common/mock';
-import type {
-  TicketDetail,
-  SignDetail,
-  CloseModal,
-  ProcessNode,
-  OperationLog,
-} from '../common/types';
+import type { TicketDetail, SignDetail, CloseModal, ProcessNode } from '../common/types';
 import { getNullTicket } from '../common/types';
 import OperationLogList from './OperationLogs';
 import type { ColumnsType } from 'antd/es/table';
