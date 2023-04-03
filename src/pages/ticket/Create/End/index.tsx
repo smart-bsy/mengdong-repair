@@ -1,31 +1,58 @@
 import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Input, Row } from 'antd';
-import React, { useEffect, useState } from 'react';
-import { mockDoingTicketList } from '../../common/mock';
+import { Button, Card, Col, message, Input, Row, Spin } from 'antd';
+import { useEffect, useState } from 'react';
 import type { Ticket } from '../../common/types';
+import { processNodes } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
+import { requestQueryTicketList } from '@/services/ticket/apply/api';
 
 const TicketEnd: React.FC = () => {
-  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
-
   const [searchKey, setSearchKey] = useState<string>('');
 
-  useEffect(() => {
-    if (isShowTicketModalOpen) {
-      console.log('fetch ticket detail from server');
-    }
-  }, [isShowTicketModalOpen]);
+  const [ticketList, setTicketList] = useState<Ticket[]>([]);
 
-  const refresh = (): void => {
-    console.log('刷新列表');
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const fetchTicketList = async (startDate?: number, endDate?: number, place?: string) => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestQueryTicketList({
+        process: processNodes.end,
+        submit: '0',
+        startDate,
+        endDate,
+        place,
+      });
+      if (result.code == 2000) {
+        setTicketList(result.data);
+      }
+    } catch (error) {
+      messageApi.error('加载失败');
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
   };
 
-  const filterTicketList = (): void => {};
+  useEffect(() => {
+    fetchTicketList();
+  }, []);
+
+  const refresh = (): void => {
+    setSearchKey('');
+    fetchTicketList();
+  };
+
+  const search = () => {
+    fetchTicketList(0, 0, searchKey);
+  };
 
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
@@ -39,7 +66,7 @@ const TicketEnd: React.FC = () => {
               />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={search}>
                 查询
               </Button>
             </Col>
@@ -52,11 +79,15 @@ const TicketEnd: React.FC = () => {
         </Row>
       </Card>
       <Card>
-        <SubmitTicketList
-          ticketList={doingTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
+        {isLoadingList ? (
+          <>
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
+          </>
+        ) : (
+          <SubmitTicketList ticketList={ticketList} />
+        )}
       </Card>
     </PageContainer>
   );

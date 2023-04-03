@@ -3,7 +3,7 @@ import type { OperationLog } from '../common/types';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { requestGetOperationLogs } from '@/services/ticket/apply/api';
+import { requestGetOperationLogs } from '@/services/ticket/operationLog/api';
 
 const OperationLogList = (props: { ticketId: number }) => {
   const { ticketId } = props;

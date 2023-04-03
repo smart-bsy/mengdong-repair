@@ -1,11 +1,4 @@
-import {
-  requestGetProcessNodeDetailList,
-  requestGetSignDetail,
-  requestSignBack,
-  requestSignSave,
-  requestSignSubmit,
-  requestTicketDetail,
-} from '@/services/ticket/apply/api';
+import { requestTicketDetail } from '@/services/ticket/apply/api';
 import type { StepProps } from 'antd';
 import { Table } from 'antd';
 import { Button, Card, Col, Descriptions, message, Modal, Row, Steps } from 'antd';
@@ -16,6 +9,14 @@ import type { TicketDetail, SignDetail, CloseModal, ProcessNode } from '../commo
 import { getNullTicket } from '../common/types';
 import OperationLogList from './OperationLogs';
 import type { ColumnsType } from 'antd/es/table';
+import {
+  requestGetProcessNodeDetailList,
+  requestGetSignDetail,
+  requestSignBack,
+  requestSignEnd,
+  requestSignSave,
+  requestSignSubmit,
+} from '@/services/ticket/process/api';
 
 interface TicketDetailComProps {
   ticketId: number;
@@ -25,6 +26,7 @@ interface TicketDetailComProps {
   canEnergy?: boolean;
   canSign?: boolean;
   canReceive?: boolean;
+  canEnd?: boolean;
 }
 
 const nullTicketDetail: TicketDetail = {
@@ -50,6 +52,7 @@ const TicketDetailModal = ({
   canEnergy = false,
   canSign = false,
   canReceive = false,
+  canEnd = false,
   closeModal,
 }: TicketDetailComProps) => {
   const [isOperationLogModalOpen, setIsOperationLogModalOpen] = useState<boolean>();
@@ -71,6 +74,8 @@ const TicketDetailModal = ({
   const [signBackBtn, setSignBackBtn] = useState<boolean>(false);
 
   const [processNodeDetailList, setProcessNodeDetailList] = useState<ProcessNode[]>([]);
+
+  const [isEnding, setIsEnding] = useState<boolean>(false);
 
   const handleSignDetailChange = (key: string, value: any): void => {
     setSignForm((prev) => {
@@ -173,6 +178,24 @@ const TicketDetailModal = ({
     }
   };
 
+  const fetchSignEnd = async (tid: number) => {
+    try {
+      setIsEnding(true);
+      const result = await requestSignEnd({ ticketId: tid });
+      if (result.data) {
+        messageApi.success('结束成功');
+        closeModal();
+      } else {
+        messageApi.error(result.message);
+      }
+    } catch (error) {
+      console.log(error);
+      messageApi.error('操作失败');
+    } finally {
+      setIsEnding(false);
+    }
+  };
+
   const openShowNodeModal = async (node: number) => {
     await fetchProcessNode(ticketDetail.ticket.id, node);
     setIsShowNodeModalOpen(true);
@@ -201,6 +224,8 @@ const TicketDetailModal = ({
                 >
                   详情
                 </Button>
+              ) : ticketDetail.cur == 7 ? (
+                ''
               ) : (
                 '等待中'
               )}
@@ -289,6 +314,10 @@ const TicketDetailModal = ({
     signForm.ticketId = ticketDetail.ticket.id;
     signForm.signer = '测试';
     fetchSignBack(signForm);
+  };
+
+  const signEnd = (): void => {
+    fetchSignEnd(ticketId);
   };
 
   return (
@@ -450,6 +479,15 @@ const TicketDetailModal = ({
               <Col>
                 <Button onClick={signSubmit} loading={signSubBtn}>
                   签收
+                </Button>
+              </Col>
+            </>
+          )}
+          {canEnd && (
+            <>
+              <Col>
+                <Button onClick={signEnd} loading={isEnding}>
+                  结束
                 </Button>
               </Col>
             </>

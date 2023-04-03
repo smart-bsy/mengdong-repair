@@ -1,10 +1,4 @@
-import type {
-  OperationLog,
-  ProcessNode,
-  SignDetail,
-  Ticket,
-  TicketDetail,
-} from '@/pages/ticket/common/types';
+import type { Ticket, TicketDetail } from '@/pages/ticket/common/types';
 import { request } from 'umi';
 
 export async function requestQueryTicketList(
@@ -105,57 +99,6 @@ export async function requestGetProcessingTicket(
       method: 'GET',
       params,
       ...(options || {}),
-    },
-  );
-}
-
-export async function requestSignSave(body: SignDetail, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: boolean }>('/api/process/sign', {
-    method: 'PUT',
-    data: body,
-    ...(options || {}),
-  });
-}
-
-export async function requestSignSubmit(body: SignDetail, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: boolean }>('/api/process/sign', {
-    method: 'POST',
-    data: body,
-    ...(options || {}),
-  });
-}
-
-export async function requestSignBack(body: SignDetail, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: boolean }>('/api/process/sign/back', {
-    method: 'POST',
-    data: body,
-    ...(options || {}),
-  });
-}
-
-export async function requestGetSignDetail(params: { ticketId: number; node: number }) {
-  return request<{ code: number; message: string; data: SignDetail }>(
-    `/api/process/detail/${params.ticketId}/${params.node}`,
-    {
-      method: 'GET',
-    },
-  );
-}
-
-export async function requestGetProcessNodeDetailList(params: { ticketId: number; node: number }) {
-  return request<{ code: number; message: string; data: ProcessNode[] }>(
-    `/api/process/detail/list/${params.ticketId}/${params.node}`,
-    {
-      method: 'GET',
-    },
-  );
-}
-
-export async function requestGetOperationLogs(params: { ticketId: number }) {
-  return request<{ code: number; message: string; data: OperationLog[] }>(
-    `/api/log/${params.ticketId}`,
-    {
-      method: 'GET',
     },
   );
 }

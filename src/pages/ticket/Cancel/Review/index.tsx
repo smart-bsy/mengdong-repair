@@ -1,30 +1,81 @@
-import { SearchOutlined } from '@ant-design/icons';
+import { Loading3QuartersOutlined, SearchOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Col, Input, Modal, Row, Select, Table } from 'antd';
-import { useState } from 'react';
-import { mockSubmitTicketList, mockTicketDetail, mockUnSubmitTicketList } from '../../common/mock';
+import { Button, Card, Col, message, Input, Modal, Row, Select, Table, Spin } from 'antd';
+import { useEffect, useState } from 'react';
 import type { Ticket } from '../../common/types';
+import { processNodes } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import TicketDetailModal from '../../components/TicketDetail';
+import { requestQueryTicketCancelList } from '@/services/ticket/cancel/api';
 
 const ticketOptions = [
-  { value: 0, label: '未提交' },
-  { value: 1, label: '已提交' },
+  { value: '0', label: '未提交' },
+  { value: '1', label: '提交' },
 ];
 
 const TicketReview: React.FC = () => {
-  const [ticketType, setTicketType] = useState<string>('0');
-  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
-  const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<Ticket[]>(mockSubmitTicketList);
+  const [searchKey, setSearchKey] = useState<string>('');
 
-  const openShowTicketModal = (): void => {
+  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
+
+  const [ticketType, setTicketType] = useState<string>('0');
+
+  const [ticketList, setTicketList] = useState<Ticket[]>([]);
+
+  const [curTicketId, setCurTicketId] = useState<number>(0);
+
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const fetchTicketList = async (
+    submit: string,
+    startDate?: number,
+    endDate?: number,
+    place?: string,
+  ) => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestQueryTicketCancelList({
+        process: processNodes.firstVerify,
+        submit,
+        startDate,
+        endDate,
+        place,
+      });
+      if (result.code == 2000) {
+        setTicketList(result.data);
+      }
+    } catch (error) {
+      messageApi.error('加载失败');
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  const refresh = (): void => {
+    setSearchKey('');
+    fetchTicketList(ticketType);
+  };
+
+  const handleTicketTypeChange = (value: string): void => {
+    setTicketType(value);
+  };
+
+  const openShowTicketModal = (id: number): void => {
+    setCurTicketId(id);
     setIsShowTicketModalOpen(true);
   };
 
   const closeShowTicketModal = (): void => {
+    setIsShowTicketModalOpen(false);
+  };
+
+  const closeRefreshShowTicketModal = (): void => {
+    refresh();
     setIsShowTicketModalOpen(false);
   };
 
@@ -37,18 +88,18 @@ const TicketReview: React.FC = () => {
     },
     {
       title: '编号',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: '申请处室',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'office',
+      key: 'office',
     },
     {
       title: '申请人',
-      dataIndex: 'owner',
-      key: 'owner',
+      dataIndex: 'applicant',
+      key: 'applicant',
     },
     {
       title: '申请时间',
@@ -76,7 +127,12 @@ const TicketReview: React.FC = () => {
         return (
           <Row gutter={10}>
             <Col>
-              <Button type="primary" onClick={openShowTicketModal}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  openShowTicketModal(id);
+                }}
+              >
                 审核
               </Button>
             </Col>
@@ -86,20 +142,35 @@ const TicketReview: React.FC = () => {
     },
   ];
 
-  const handleTicketTypeChange = (value: string): void => {
-    setTicketType(value);
+  useEffect(() => {
+    fetchTicketList(ticketOptions[0].value);
+  }, []);
+
+  useEffect(() => {
+    fetchTicketList(ticketType);
+  }, [ticketType]);
+
+  const search = () => {
+    fetchTicketList(ticketType, 0, 0, searchKey);
   };
 
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
             <Col>
-              <Input placeholder="涉及场站" />
+              <Input
+                placeholder="涉及场站"
+                value={searchKey}
+                onChange={({ target }) => {
+                  setSearchKey(target.value);
+                }}
+              />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={() => {}}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={search}>
                 查询
               </Button>
             </Col>
@@ -114,32 +185,47 @@ const TicketReview: React.FC = () => {
               }}
             />
           </Col>
+          <Col>
+            <Button icon={<Loading3QuartersOutlined />} onClick={refresh}>
+              刷新
+            </Button>
+          </Col>
         </Row>
       </Card>
       <Card>
-        {ticketType == '0' ? (
+        {isLoadingList ? (
           <>
-            <Table columns={unSubmitColumns} dataSource={unSubmitTicketList} />
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
           </>
         ) : (
           <>
-            <SubmitTicketList
-              ticketList={submitTicketList}
-              searchKeyWord={''}
-              searchRangeDate={['', '']}
-            />
+            {ticketType == '0' ? (
+              <>
+                <Table columns={unSubmitColumns} dataSource={ticketList} />
+              </>
+            ) : (
+              <>
+                <SubmitTicketList ticketList={ticketList} />
+              </>
+            )}
           </>
         )}
       </Card>
       <Modal
         title="场站参数详情"
         open={isShowTicketModalOpen}
-        onOk={openShowTicketModal}
         onCancel={closeShowTicketModal}
         width={1500}
         footer={null}
+        key={curTicketId}
       >
-        <TicketDetailModal ticketDetail={mockTicketDetail} canReview={true} />
+        <TicketDetailModal
+          closeModal={closeRefreshShowTicketModal}
+          ticketId={curTicketId}
+          canReview={true}
+        />
       </Modal>
     </PageContainer>
   );

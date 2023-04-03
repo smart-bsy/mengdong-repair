@@ -15,81 +15,58 @@ import {
   Modal,
   Row,
   Select,
-  Steps,
-  Table,
-  Tag,
+  Spin,
   Upload,
+  message,
+  Table,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import TextArea from 'antd/lib/input/TextArea';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import { useAccess } from 'umi';
-import {
-  mockDoingTicketList,
-  mockSubmitTicketList,
-  mockUnSubmitTicketList,
-} from '../../common/mock';
 import type { Ticket } from '../../common/types';
+import { processNodes } from '../../common/types';
+import { getNullTicket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
+import type { ColumnsType } from 'antd/es/table';
+import {
+  requestCreateTicket,
+  requestExecutingTicketApplyList,
+  requestQueryTicketCancelList,
+  requestSaveTicket,
+  requestSubmitTicket,
+  requestTicketDetail,
+} from '@/services/ticket/cancel/api';
 
 const { RangePicker } = DatePicker;
 const dateFormat = 'YYYY/MM/DD';
 const ticketOptions = [
-  { value: 0, label: '未提交' },
-  { value: 1, label: '提交' },
+  { value: '0', label: '未提交' },
+  { value: '1', label: '提交' },
 ];
-const nullTicket: Ticket = {
-  id: 0,
-  code: '',
-  office: '',
-  applicant: '',
-  createTime: 0,
-  involvedStation: '',
-  reason: '',
-  opinion: '',
-  status: '',
-};
+
 const TicketList: React.FC = () => {
-  const access = useAccess();
-
   const [isCreateTicketModalOpen, setIsCreateTicketModalOpen] = useState<boolean>(false);
-  const [isShowTicketModalOpen, setIsShowTicketModalOpen] = useState<boolean>(false);
 
-  const [createTicketForm, setCreateTicketForm] = useState<Ticket>(nullTicket);
+  const [messageApi, contextHolder] = message.useMessage();
 
-  const [unSubmitTicketList, setunSubmitTicketList] = useState<Ticket[]>(mockUnSubmitTicketList);
-  const [submitTicketList, setSubmitTicketList] = useState<Ticket[]>(mockSubmitTicketList);
-  const [doingTicketList, setDoingTicketList] = useState<Ticket[]>(mockDoingTicketList);
+  const [isCreatingTicket, setIsCreatingTicket] = useState<boolean>(false);
+
+  const [createTicketForm, setCreateTicketForm] = useState<Ticket>(getNullTicket());
+
+  const [ticketList, setTicketList] = useState<Ticket[]>([]);
+
+  const [selectTicketList, setSelectTicketList] = useState<Ticket[]>([]);
 
   const [searchKey, setSearchKey] = useState<string>('');
 
-  const [isSelectTicketModalOpen, setIsSelectTicketModalOpen] = useState<boolean>(false);
-
   const [ticketType, setTicketType] = useState<string>('0');
-  useEffect(() => {
-    console.log(access);
-  }, []);
 
-  useEffect(() => {
-    if (isShowTicketModalOpen) {
-      console.log('fetch ticket detail from server');
-    }
-  }, [isShowTicketModalOpen]);
+  const [isLoadingList, setIsLoadingList] = useState<boolean>(false);
 
-  // 这里后面应该更改为 remote fetch
-  useEffect(() => {
-    // if (ticketType == '0') {
-    //   setShowTicketList(mockUnSubmitTicketList);
-    // }
-    // if (ticketType == '1') {
-    //   setShowTicketList(mockSubmitTicketList);
-    // }
-    // if (ticketType == '2') {
-    //   setShowTicketList(mockDoingTicketList);
-    // }
-  }, [ticketType]);
+  const [dateRange, setDateRange] = useState<[string, string]>(['', '']);
+
+  const [isSelectTicketModalOpen, setIsSelectTicketModalOpen] = useState<boolean>(false);
 
   const openSelectTicketModal = (): void => {
     setIsSelectTicketModalOpen(true);
@@ -98,13 +75,144 @@ const TicketList: React.FC = () => {
   const closeSelectTicketModal = (): void => {
     setIsSelectTicketModalOpen(false);
   };
-  const openCreateTicketModal = (): void => {
-    console.log('open create ticket modal');
+
+  const fetchTicketList = async (
+    submit: string,
+    startDate?: number,
+    endDate?: number,
+    place?: string,
+  ) => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestQueryTicketCancelList({
+        process: processNodes.apply,
+        submit,
+        startDate,
+        endDate,
+        place,
+      });
+      if (result.code == 2000) {
+        setTicketList(result.data);
+      }
+    } catch (error) {
+      messageApi.error('加载失败');
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  const fetchExecutingTicketList = async () => {
+    setIsLoadingList(true);
+    try {
+      const result = await requestExecutingTicketApplyList();
+      if (result.code == 2000) {
+        setSelectTicketList(result.data);
+      }
+    } catch (error) {
+      messageApi.error('加载失败');
+      console.log(error);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTicketList(ticketOptions[0].value);
+    setCreateTicketForm(getNullTicket());
+  }, []);
+
+  useEffect(() => {
+    fetchTicketList(ticketType);
+  }, [ticketType]);
+
+  useEffect(() => {
+    if (isSelectTicketModalOpen) {
+      fetchExecutingTicketList();
+    }
+  }, [isSelectTicketModalOpen]);
+
+  const searchTicketList = () => {
+    fetchTicketList(
+      ticketType,
+      dateRange[0] == '' ? 0 : dayjs(dateRange[0], 'YYYY/MM/DD').valueOf(),
+      dateRange[1] == '' ? 0 : dayjs(dateRange[1], 'YYYY/MM/DD').valueOf(),
+      searchKey,
+    );
+  };
+
+  const openCreateTicketModal = (ticket: Ticket): void => {
+    ticket.applicant = '';
+    ticket.createTime = dayjs().valueOf();
+    ticket.office = '测试处室';
+    setCreateTicketForm(ticket);
     setIsCreateTicketModalOpen(true);
+    setIsSelectTicketModalOpen(false);
   };
 
   const closeCreateTicketModal = (): void => {
     setIsCreateTicketModalOpen(false);
+  };
+
+  const refresh = (): void => {
+    setDateRange(['', '']);
+    setSearchKey('');
+    fetchTicketList(ticketType);
+  };
+
+  const handleCreateTicketFormItemChange = (name: string, value: any): void => {
+    setCreateTicketForm((prev) => {
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleTicketTypeChange = (value: string): void => {
+    setTicketType(value);
+  };
+
+  const saveTicketHandle = async (ticket: Ticket) => {
+    const res = await requestSaveTicket(ticket);
+    if (res.code == 2000) {
+    } else {
+      throw new Error('保存失败');
+    }
+  };
+
+  const submitTicketHandle = async (id: number) => {
+    const result = await requestSubmitTicket(id);
+    if (result.code == 2000) {
+    } else {
+      throw new Error('提交失败');
+    }
+  };
+
+  const deleteTicketHandle = async (id: number) => {
+    const result = await requestTicketDetail({ ticketId: id });
+    if (result.code == 2000) {
+    } else {
+      throw new Error('删除失败');
+    }
+  };
+
+  const rangeDateChange = (values: any, dateString: [string, string]) => {
+    setDateRange(dateString);
+  };
+
+  const createTicket = async () => {
+    try {
+      setIsCreatingTicket(true);
+      const result = await requestCreateTicket(createTicketForm);
+      if (result.code == 2000) {
+        messageApi.success('创建成功');
+        closeCreateTicketModal();
+        fetchTicketList('0');
+      }
+    } catch (error) {
+      console.log(error);
+      messageApi.error('创建失败');
+    } finally {
+      setIsCreatingTicket(false);
+    }
   };
 
   const doingColumns: ColumnsType<Ticket> = [
@@ -148,96 +256,29 @@ const TicketList: React.FC = () => {
       key: 'reason',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: '操作',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id, record, index) => {
+        return (
+          <>
+            <Button
+              type="primary"
+              onClick={() => {
+                openCreateTicketModal(record);
+              }}
+            >
+              选择
+            </Button>
+          </>
+        );
+      },
     },
   ];
 
-  // dayjs(dateRange[1], 'YYYY/MM/DD').millisecond()
-  const refresh = (): void => {
-    console.log('刷新列表');
-  };
-
-  const handleTicketTypeChange = (value: string): void => {
-    setTicketType(value);
-  };
-
-  const filterTicketList = (): void => {
-    // if (searchKey == '') {
-    //   if (ticketType == '0') {
-    //     setShowTicketList(mockUnSubmitTicketList);
-    //   } else {
-    //     setShowTicketList(mockSubmitTicketList);
-    //   }
-    //   return;
-    // }
-    // setShowTicketList(() => {
-    //   if (ticketType == '0') {
-    //     return mockUnSubmitTicketList.filter((t) => {
-    //       return t.involvedStation.indexOf(searchKey) >= 0;
-    //     });
-    //   }
-    //   return mockSubmitTicketList.filter((t) => {
-    //     return t.involvedStation.indexOf(searchKey) >= 0;
-    //   });
-    // });
-  };
-
-  const handleCreateTicketFormItemChange = (name: string, value: any): void => {
-    setCreateTicketForm((prev) => {
-      return { ...prev, [name]: value };
-    });
-  };
-
-  const getTableNode = (type: string): React.ReactNode => {
-    if (type == '0') {
-      return (
-        <UnSubmitTicketList
-          ticketList={unSubmitTicketList}
-          saveHandle={(ticket: Ticket) => {}}
-          submitHandleHandle={(ticket: Ticket) => {}}
-          deleteHandle={(ticket: Ticket) => {}}
-          // 后面使用useState
-          searchKeyword={''}
-          searchDateRange={['', '']}
-        />
-      );
-    }
-    if (type == '1') {
-      return (
-        <SubmitTicketList
-          ticketList={submitTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
-      );
-    }
-    if (type == '2') {
-      return (
-        <SubmitTicketList
-          ticketList={doingTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
-      );
-    }
-  };
-
-  //   range date filter
-  const rangeDateChange = (values: any, dateString: [string, string]) => {
-    console.log(dateString);
-  };
-
-  // 只能是SubmitTicket
-  const handleCreateFromOriginTicket = (record: Ticket) => {
-    console.log(record);
-    setCreateTicketForm(record);
-    openCreateTicketModal();
-  };
-
   return (
     <PageContainer>
+      {contextHolder}
       <Card>
         <Row gutter={16}>
           <Row>
@@ -246,6 +287,7 @@ const TicketList: React.FC = () => {
               onChange={(values, formatString) => {
                 rangeDateChange(values, formatString);
               }}
+              allowClear
             />
           </Row>
           <Row>
@@ -259,7 +301,7 @@ const TicketList: React.FC = () => {
               />
             </Col>
             <Col>
-              <Button type="primary" icon={<SearchOutlined />} onClick={filterTicketList}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={searchTicketList}>
                 查询
               </Button>
             </Col>
@@ -286,25 +328,33 @@ const TicketList: React.FC = () => {
           </Col>
         </Row>
       </Card>
-      <Card>{getTableNode(ticketType)}</Card>
-      <Modal
-        open={isSelectTicketModalOpen}
-        onCancel={closeSelectTicketModal}
-        footer={null}
-        width={1000}
-      >
-        <Table
-          columns={doingColumns}
-          dataSource={mockSubmitTicketList}
-          onRow={(record) => {
-            return {
-              onClick: () => {
-                handleCreateFromOriginTicket(record);
-              }, // 点击行
-            };
-          }}
-        />
-      </Modal>
+      <Card>
+        {isLoadingList ? (
+          <>
+            <Spin tip="Loading" size="large">
+              <div className="content" style={{ padding: '50px', borderRadius: '4px' }} />
+            </Spin>
+          </>
+        ) : (
+          <>
+            {ticketType == '0' ? (
+              <>
+                <UnSubmitTicketList
+                  ticketList={ticketList}
+                  setTicketList={setTicketList}
+                  saveHandle={saveTicketHandle}
+                  submitHandle={submitTicketHandle}
+                  deleteHandle={deleteTicketHandle}
+                />
+              </>
+            ) : (
+              <>
+                <SubmitTicketList ticketList={ticketList} />
+              </>
+            )}
+          </>
+        )}
+      </Card>
       <Modal
         title="新建"
         open={isCreateTicketModalOpen}
@@ -315,7 +365,7 @@ const TicketList: React.FC = () => {
         <Descriptions title={`申请编号`} bordered>
           <Descriptions.Item label="申请处室">{createTicketForm.office}</Descriptions.Item>
           <Descriptions.Item label="申请时间">
-            {dayjs().format('YYYY-MM-DD HH:mm')}
+            {dayjs(createTicketForm.createTime).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
           <Descriptions.Item label="涉及场站">
             <Input
@@ -344,46 +394,23 @@ const TicketList: React.FC = () => {
             </Upload>
           </Descriptions.Item>
         </Descriptions>
-        <Card style={{ marginTop: 15 }}>场站参数设置流程</Card>
-        <Card>
-          <Steps
-            current={1}
-            status="wait"
-            items={[
-              {
-                title: '申请',
-              },
-              {
-                title: '初审',
-              },
-              {
-                title: '主任审批',
-              },
-              {
-                title: '新能源会签',
-              },
-              {
-                title: '调度会签',
-              },
-              {
-                title: '调度签收',
-              },
-              {
-                title: '执行中',
-              },
-              {
-                title: '结束',
-              },
-            ]}
-          />
-        </Card>
         <div style={{ marginTop: 15 }}>
           <Row justify={'center'} align="bottom" gutter={16}>
             <Col>
-              <Button type="primary">确认</Button>
+              <Button onClick={createTicket} type="primary" loading={isCreatingTicket}>
+                确认
+              </Button>
             </Col>
           </Row>
         </div>
+      </Modal>
+      <Modal
+        open={isSelectTicketModalOpen}
+        onCancel={closeSelectTicketModal}
+        footer={null}
+        width={1500}
+      >
+        <Table columns={doingColumns} dataSource={selectTicketList} />
       </Modal>
     </PageContainer>
   );
