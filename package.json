@@ -62,6 +62,7 @@
     "react-dev-inspector": "^1.7.0",
     "react-dom": "^17.0.0",
     "react-helmet-async": "^1.2.0",
+    "reactflow": "^11.7.0",
     "umi": "^3.5.0"
   },
   "devDependencies": {
