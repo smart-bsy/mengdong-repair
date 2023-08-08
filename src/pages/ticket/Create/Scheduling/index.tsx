@@ -9,6 +9,7 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import TicketDetailModal from '../../components/TicketDetail';
 import { requestQueryTicketList } from '@/services/ticket/apply/api';
+import React from 'react';
 
 const ticketOptions = [
   { value: '0', label: '未提交' },

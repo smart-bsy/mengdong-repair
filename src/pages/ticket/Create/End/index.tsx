@@ -52,11 +52,7 @@ const TicketEnd: React.FC = () => {
         </Row>
       </Card>
       <Card>
-        <SubmitTicketList
-          ticketList={doingTicketList}
-          searchKeyWord={''}
-          searchRangeDate={['', '']}
-        />
+        <SubmitTicketList ticketList={doingTicketList} />
       </Card>
     </PageContainer>
   );

@@ -17,7 +17,7 @@ export async function requestQueryTicketList(
   },
   options?: Record<string, any>,
 ) {
-  return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket/demand', {
+  return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket', {
     method: 'GET',
     params: {
       ...params,
@@ -27,7 +27,7 @@ export async function requestQueryTicketList(
 }
 
 export async function requestCreateTicket(body: Ticket, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket/demand', {
+  return request<{ code: number; message: string; data: Ticket[] }>('/api/ticket', {
     method: 'POST',
     data: body,
     ...(options || {}),
@@ -39,7 +39,7 @@ export async function requestGetTicketById(
   options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: Ticket }>(
-    `/api/ticket/demand/${params.ticketId}`,
+    `/api/ticket/${params.ticketId}`,
     {
       method: 'GET',
       ...(options || {}),
@@ -52,7 +52,7 @@ export async function requestTicketDetail(
   options?: Record<string, any>,
 ) {
   return request<{ code: number; message: string; data: TicketDetail }>(
-    `/api/ticket/demand/detail/${params.ticketId}`,
+    `/api/ticket/detail/${params.ticketId}`,
     {
       method: 'GET',
       ...(options || {}),
@@ -61,7 +61,7 @@ export async function requestTicketDetail(
 }
 
 export async function requestSaveTicket(body: Ticket, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: TicketDetail }>(`/api/ticket/demand`, {
+  return request<{ code: number; message: string; data: TicketDetail }>(`/api/ticket`, {
     method: 'PUT',
     data: body,
     ...(options || {}),
@@ -70,7 +70,7 @@ export async function requestSaveTicket(body: Ticket, options?: Record<string, a
 
 export async function requestSubmitTicket(id: number, options?: Record<string, any>) {
   return request<{ code: number; message: string; data: TicketDetail }>(
-    `/api/ticket/demand/submit/${id}`,
+    `/api/ticket/submit/${id}`,
     {
       method: 'POST',
       ...(options || {}),
@@ -79,7 +79,7 @@ export async function requestSubmitTicket(id: number, options?: Record<string, a
 }
 
 export async function requestDeleteTicket(id: number, options?: Record<string, any>) {
-  return request<{ code: number; message: string; data: boolean }>(`/api/ticket/demand/${id}`, {
+  return request<{ code: number; message: string; data: boolean }>(`/api/ticket/${id}`, {
     method: 'DELETE',
     ...(options || {}),
   });
@@ -99,14 +99,11 @@ export async function requestGetProcessingTicket(
   },
   options?: Record<string, any>,
 ) {
-  return request<{ code: number; message: string; data: Ticket[] }>(
-    `/api/ticket/demand/processing`,
-    {
-      method: 'GET',
-      params,
-      ...(options || {}),
-    },
-  );
+  return request<{ code: number; message: string; data: Ticket[] }>(`/api/ticket/processing`, {
+    method: 'GET',
+    params,
+    ...(options || {}),
+  });
 }
 
 export async function requestSignSave(body: SignDetail, options?: Record<string, any>) {

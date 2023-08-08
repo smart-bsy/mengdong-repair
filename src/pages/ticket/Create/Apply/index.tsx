@@ -35,7 +35,9 @@ import { getNullTicket } from '../../common/types';
 import SubmitTicketList from '../../components/SubmitTicketList';
 import UnSubmitTicketList from '../../components/UnSubmitTicketList';
 
-const { RangePicker } = DatePicker;
+// const { RangePicker } = DatePicker;
+
+const RangePicker: any = DatePicker.RangePicker;
 const dateFormat = 'YYYY/MM/DD';
 const ticketOptions = [
   { value: '0', label: '未提交' },
@@ -186,7 +188,7 @@ const TicketList: React.FC = () => {
           <Row>
             <RangePicker
               format={dateFormat}
-              onChange={(values, formatString) => {
+              onChange={(values: any, formatString: [string, string]) => {
                 rangeDateChange(values, formatString);
               }}
               allowClear

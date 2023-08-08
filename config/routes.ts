@@ -103,57 +103,6 @@
           },
         ],
       },
-      {
-        path: '/ticket/cancel',
-        name: '取消单',
-        routes: [
-          {
-            path: '/ticket/cancel/apply',
-            name: '申请',
-            component: './ticket/Cancel/Apply',
-          },
-          {
-            path: '/ticket/cancel/process',
-            name: '已发起流程需求单查询',
-            component: './ticket/Cancel/Process',
-          },
-          {
-            path: '/ticket/cancel/review',
-            name: '审核',
-            component: './ticket/Cancel/Review',
-          },
-          {
-            path: './ticket/cancel/approve',
-            name: '批准',
-            component: './ticket/Cancel/Approve',
-          },
-          {
-            path: './ticket/cancel/new-energy',
-            name: '新能源会签',
-            component: './ticket/Cancel/NewEnergy',
-          },
-          {
-            path: './ticket/cancel/scheduling',
-            name: '调度会签',
-            component: './ticket/Cancel/Scheduling',
-          },
-          {
-            path: './ticket/cancel/scheduling-receive',
-            name: '调度接收',
-            component: './ticket/Cancel/ScheduleReceive',
-          },
-          {
-            path: './ticket/cancel/executing',
-            name: '需求单执行',
-            component: './ticket/Cancel/Executing',
-          },
-          {
-            path: './ticket/cancel/end',
-            name: '结束（归档箱）',
-            component: './ticket/Cancel/End',
-          },
-        ],
-      },
     ],
   },
   {

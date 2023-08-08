@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table';
 import TicketDetailModal from './TicketDetail';
 import { useState } from 'react';
 import type { Ticket } from '../common/types';
+import React from 'react';
 
 const SubmitTicketList = (props: { ticketList: Ticket[] }) => {
   const { ticketList } = props;
